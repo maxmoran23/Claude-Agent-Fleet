@@ -71,12 +71,12 @@ Agents are stateless by default — each scheduled run is a fresh invocation wit
 │  └─────────────┘  └─────────────┘               │
 │                                                  │
 │  ┌─────────────┐  ┌─────────────┐               │
-│  │   Fleet      │  │  Betting    │               │
+│  │   Fleet      │  │  Analytics  │               │
 │  │   State      │  │   State     │               │
 │  │             │  │             │               │
-│  │ Run logs    │  │ Edges       │               │
-│  │ Health      │  │ Records     │               │
-│  │ Quality     │  │ Sizing      │               │
+│  │ Run logs    │  │ Signals     │               │
+│  │ Health      │  │ Tracking    │               │
+│  │ Quality     │  │ Models      │               │
 │  │ Cross-agent │  │ History     │               │
 │  └─────────────┘  └─────────────┘               │
 │                                                  │

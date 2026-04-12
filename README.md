@@ -80,7 +80,7 @@ Full architecture documentation: **[ARCHITECTURE.md](ARCHITECTURE.md)**
 | Alt-Coin Scout | Daily | Token discovery with built-in compliance risk flags |
 | Crypto Sim Trader | Every 4h | Virtual $100K portfolio — autonomous position management with risk limits |
 | Alpha Lab | Every 6h | DeFi protocol monitoring — TVL shifts, yield analysis, smart contract risk |
-| Edge Hunter | Daily | Sports analytics — statistical edge detection, quarter-Kelly sizing |
+| Edge Hunter | Daily | Quantitative analytics — statistical signal detection, probabilistic modeling |
 | Regulatory Oracle | Daily | Crypto/AML regulatory landscape — enforcement, legislation, deadlines |
 | AI Vanguard | Daily | AI/ML research translation — papers to actionable insights |
 | Idea Forge | Daily | Cross-domain innovation — connects signals across all fleet channels |
@@ -229,21 +229,44 @@ Things that might be useful context for anyone thinking about agent systems at s
 
 ---
 
-## Repository Contents
+## Try It Yourself
 
-| File | Contents |
-|------|----------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design — runtime, state management, data flow, coupling model, why no traditional code |
-| [FLEET-OPS.md](FLEET-OPS.md) | Operational patterns — execution cycle, fallback chains, observability, self-repair, escalation |
-| [docs/examples/sample-agent.md](docs/examples/sample-agent.md) | Redacted agent template showing the standard structure |
-| [docs/examples/sample-report.html](docs/examples/sample-report.html) | Redacted HTML report template showing output format |
+Three fully functional example agents are included in this repo — copy-paste ready, no API keys required, immediately deployable as Claude Code scheduled tasks.
 
-Agent configurations, skills library, and operational data are maintained privately.
+| Example | What It Does | Complexity |
+|---------|-------------|-----------|
+| **[Research Digest](examples/research-digest/AGENT.md)** | Daily AI/ML research briefing with severity-rated findings | Entry-level |
+| **[Market Monitor](examples/market-monitor/AGENT.md)** | Crypto market snapshots with sentiment analysis and state deltas | Intermediate |
+| **[Fleet Watchdog](examples/fleet-watchdog/AGENT.md)** | Auto-discovers and monitors other agents' health, flags failures | Advanced |
+
+Each agent demonstrates the full production pattern: state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence. See **[QUICKSTART.md](QUICKSTART.md)** for setup instructions.
+
+---
+
+## Repository Structure
+
+```
+├── README.md                                    # This file
+├── ARCHITECTURE.md                              # System design, state management, data flow
+├── FLEET-OPS.md                                 # Operational patterns, observability, self-repair
+├── QUICKSTART.md                                # Deploy an example agent in 5 minutes
+│
+├── examples/                                    # Fully functional, copy-paste ready agents
+│   ├── research-digest/AGENT.md                 # AI/ML research briefing agent
+│   ├── market-monitor/AGENT.md                  # Crypto market intelligence agent
+│   └── fleet-watchdog/AGENT.md                  # Fleet health monitoring agent
+│
+└── docs/examples/                               # Structural references
+    ├── structural-reference-agent.md            # Annotated template showing agent anatomy
+    └── report-template-reference.html           # HTML report template with styling patterns
+```
+
+The 38 production agent configurations, skills library, and operational data are maintained in a separate private repository.
 
 ---
 
 ## About
 
-Built and operated by **Max Moran** — financial crime and digital asset compliance professional (CAMS). This system sits at the intersection of deep domain expertise in crypto/AML regulatory work and intensive hands-on experience building autonomous AI agent systems.
+Built and operated by **Max Moran** — financial crime and digital asset compliance professional (CAMS). This system sits at the intersection of deep domain expertise in crypto/AML regulatory work and intensive hands-on experience building autonomous AI agent systems at scale.
 
-The fleet is actively running in production and continues to scale.
+The fleet is actively running in production and continues to expand.
