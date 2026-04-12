@@ -1,0 +1,184 @@
+<!--
+  SAMPLE REPORT TEMPLATE
+
+  This is a redacted example showing the HTML report structure used by
+  Cortex agents. Actual agent-specific content, data source integrations,
+  and styling details are maintained in a private repository.
+
+  Each Cortex agent generates timestamped HTML reports on every run.
+  Reports are self-contained single-file HTML documents viewable in any browser.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Agent Name] — Intelligence Report</title>
+    <style>
+        /*
+         * Reports use a dark-themed, information-dense layout
+         * optimized for scanning large amounts of structured data.
+         *
+         * Design principles:
+         * - High contrast for readability
+         * - Color-coded severity indicators
+         * - Collapsible sections for drill-down
+         * - Responsive for mobile viewing
+         * - Print-friendly
+         */
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --border: #1e293b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .report-header {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
+            border-bottom: 1px solid var(--border);
+            padding: 2rem;
+        }
+
+        .report-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 1rem 2rem;
+            padding: 1.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Severity indicators */
+        .severity-critical { color: var(--accent-red); font-weight: 700; }
+        .severity-high { color: var(--accent-amber); font-weight: 600; }
+        .severity-medium { color: var(--accent-blue); }
+        .severity-low { color: var(--text-secondary); }
+
+        /* Health footer */
+        .health-footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 1rem 2rem;
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .quality-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .quality-high { background: rgba(16,185,129,0.2); color: var(--accent-green); }
+        .quality-mid { background: rgba(245,158,11,0.2); color: var(--accent-amber); }
+        .quality-low { background: rgba(239,68,68,0.2); color: var(--accent-red); }
+    </style>
+</head>
+<body>
+    <!-- REPORT HEADER -->
+    <div class="report-header">
+        <h1>[Agent Name] — Intelligence Report</h1>
+        <div class="report-meta">
+            <span>Generated: [TIMESTAMP]</span>
+            <span>Run #[N] since deployment</span>
+            <span>Quality: <span class="quality-badge quality-high">[SCORE]/10</span></span>
+        </div>
+    </div>
+
+    <!-- EXECUTIVE SUMMARY -->
+    <div class="section">
+        <h2>Executive Summary</h2>
+        <p>[Top-line findings from this run — what changed, what matters, what to watch]</p>
+    </div>
+
+    <!-- KEY FINDINGS -->
+    <div class="section">
+        <h2>Key Findings</h2>
+        <!--
+            Findings are severity-tagged and structured:
+            - CRITICAL: Immediate action required
+            - HIGH: Significant development, monitor closely
+            - MEDIUM: Notable, tracked in Notion DB
+            - LOW: Background context
+        -->
+        <div class="finding">
+            <span class="severity-high">HIGH</span>
+            <p>[Finding description with supporting data]</p>
+        </div>
+    </div>
+
+    <!-- ANALYSIS SECTIONS (domain-specific) -->
+    <div class="section">
+        <h2>[Domain-Specific Analysis]</h2>
+        <!--
+            Content varies by agent type:
+            - Market agents: price tables, sentiment gauges, correlation matrices
+            - Regulatory agents: enforcement timelines, legislation trackers
+            - Research agents: paper summaries, innovation maps
+            - Portfolio agents: position tables, P&L, risk metrics
+        -->
+    </div>
+
+    <!-- STATE DELTA -->
+    <div class="section">
+        <h2>Changes Since Last Run</h2>
+        <!-- What's new, what changed, what was removed compared to prior state -->
+    </div>
+
+    <!-- HEALTH FOOTER (standardized across all agents) -->
+    <div class="health-footer">
+        <div>
+            <strong>Sources:</strong> [Source A] (OK) · [Source B] (OK) · [Source C] (FALLBACK)
+        </div>
+        <div>
+            <strong>Fallbacks:</strong> [N] of [M] sources required fallback
+        </div>
+        <div>
+            <strong>Quality:</strong> <span class="quality-badge quality-high">[SCORE]/10</span>
+        </div>
+        <div>
+            <strong>Runtime:</strong> [Ns] · <strong>Prior run:</strong> [TIMESTAMP]
+        </div>
+    </div>
+</body>
+</html>
