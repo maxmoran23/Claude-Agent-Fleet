@@ -80,9 +80,11 @@ Once you have a few agents running:
    - Step 6: Update any dashboards
    - Step 7: Persist state
 
-3. **Add delivery channels** — connect Slack for real-time posts, Gmail for digest emails, Apple Notes for mobile reference.
+3. **Add delivery channels** — connect Slack for real-time posts, Gmail for digest emails, Google Calendar for push notifications.
 
 4. **Build a Synthesis agent** — once you have 5+ agents, create an agent that reads all their outputs and identifies cross-cutting themes. This is where fleet intelligence becomes more than the sum of its parts.
+
+5. **Add budget awareness** — as your fleet grows, track run frequency and assign priority tiers. Throttle frequency before reducing model quality. See [FLEET-OPS.md](FLEET-OPS.md) for the JIT budget management pattern.
 
 ---
 
