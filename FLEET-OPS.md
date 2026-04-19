@@ -158,26 +158,28 @@ Tracks emoji reactions on agent posts across all channels. Calculates engagement
 
 ## JIT Budget Management
 
-The fleet runs all agents on Opus 4.6 (1M context). The budget lever is **frequency, never quality.**
+Agents run on a single premium model configuration — no model downgrades, no prompt trimming. The budget lever is **frequency, never quality.**
 
 ### How It Works
 
-The Watchdog agent counts total fleet runs per billing week and projects burn rate against an 800 run/week target:
+The Watchdog agent counts total fleet runs per billing week and projects burn rate against a configurable weekly target (set per deployment based on token envelope):
 
 ```
 burn_rate = observed_runs / hours_elapsed_this_week
 projected = burn_rate * 168 (hours/week)
-budget_ratio = projected / 800
+budget_ratio = projected / weekly_target
 ```
 
 ### Priority Tiers
 
-| Tier | Agents | Throttle Behavior |
-|------|--------|-------------------|
-| **P0 (sacred)** | 7 core agents — daily brief, market maven, regulatory oracle, edge hunter, email intelligence, sim trader, email digest | Never throttled. These produce unique, actionable, time-sensitive output. |
-| **P1 (protect)** | Alpha Lab, onchain watchlist, synthesis engine, alt-coin scout, meeting prep, calendar alerts, opportunity radar | Frequency can flex under pressure. Reduced to 1x/day max at RED level. |
-| **P2 (throttle early)** | Fleet Query, headline flash, auto-repair, fleet relay, alert scan, thread responder, market pulse, catch-up digest | High-frequency agents where wider intervals don't materially impact utility. |
-| **P3 (luxury)** | Research trawls, innovation sparks, engagement tracking, portfolio tracker | First to pause — valuable but not urgent. |
+Typical priority tier classification for a mature fleet (adjust for your deployment):
+
+| Tier | Example Agents | Throttle Behavior |
+|------|----------------|-------------------|
+| **P0 (sacred)** | Daily brief, primary regulatory monitor, critical alert router, digest aggregator, and the watchdog itself | Never throttled. These produce unique, actionable, time-sensitive output the fleet cannot function without. |
+| **P1 (protect)** | Market monitor, on-chain watchlist, synthesis engine, regulatory oracle, meeting prep, calendar alerts, auto-repair | Frequency can flex under pressure. Reduced to 1x/day max at RED level. |
+| **P2 (throttle early)** | Fleet query, headline flash, market pulse, cross-agent relays, thread enrichers, catch-up digests | High-frequency agents where wider intervals don't materially impact utility. |
+| **P3 (luxury)** | Research trawls, innovation/discovery agents, engagement tracking, performance tracking | First to pause — valuable but not urgent. |
 
 ### Escalation Levels
 

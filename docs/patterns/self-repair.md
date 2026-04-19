@@ -135,7 +135,7 @@ Over time, the repair log becomes the institutional memory of fleet evolution â€
 
 **Auditability is free.** Every fix is a git commit. The operator can always ask "when did this change?" and get a precise answer.
 
-**It scales with fleet size.** One auto-repair agent can maintain 5 agents or 50 agents with the same effort. Manual maintenance doesn't scale.
+**It scales with fleet size.** One auto-repair agent can maintain a handful of agents or many times that with the same effort. Manual maintenance doesn't scale.
 
 **It catches what humans miss.** Running structural validation 3x/day catches drift that would take weeks for an operator to notice during ad-hoc review.
 

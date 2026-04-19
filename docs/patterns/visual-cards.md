@@ -64,7 +64,7 @@ Agent posts the URL in Slack. Slack unfurls. Card renders.
 | Market snapshot | `/api/market-snapshot` | Market monitor, market pulse |
 | Alert card | `/api/alert-card` | Critical escalation routing |
 | Status overview | `/api/status-overview` | Fleet watchdog, auto-repair |
-| Pipeline funnel | `/api/pipeline-funnel` | Opportunity radar, workflow agents |
+| Pipeline funnel | `/api/pipeline-funnel` | Opportunity-tracking and workflow agents |
 | Severity matrix | `/api/severity-matrix` | Regulatory oracle, compliance hub |
 
 Each card endpoint is ~100 lines of Satori JSX. The whole card system for a fleet typically fits in one serverless deployment with a dozen endpoints.

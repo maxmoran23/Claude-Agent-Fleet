@@ -257,14 +257,14 @@ WATCHDOG (4x/day)
     ├── Count all agent posts across channels this billing week
     ├── Calculate burn rate (runs/hour)
     ├── Project weekly total
-    ├── Compare against 800 run/week target
+    ├── Compare against the configured weekly-target
     │
     └── Determine JIT level:
         │
         ├── NORMAL (≤ target)    -> All agents at baseline
         ├── GREEN  (1.0-1.2x)   -> Pause P3 luxury agents
         ├── YELLOW (1.2-1.5x)   -> Throttle P2 high-frequency agents
-        └── RED    (> 1.5x)     -> Protect only P0 core (7 agents)
+        └── RED    (> 1.5x)     -> Protect only P0 core agents
 ```
 
 **Priority tiers:**
