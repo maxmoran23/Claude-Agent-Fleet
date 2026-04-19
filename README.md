@@ -1,6 +1,6 @@
 # Claude Agent Fleet
 
-**A production-grade framework for building, scheduling, and operating autonomous agent fleets on Claude Code. Self-repairing, self-budgeting, zero traditional code.**
+**A production-grade framework for building, scheduling, and operating autonomous agent fleets on Claude. Self-repairing, self-budgeting, with runnable Python reference implementations.**
 
 ---
 
@@ -10,7 +10,44 @@ A reference architecture for operating multiple autonomous agents as a cohesive 
 
 Every agent is a structured natural language prompt executed on a schedule. Agents gather live data from external sources, maintain persistent memory across runs via Slack Canvases and a SQLite data layer, rate their own output quality, and — when something breaks — repair themselves without human intervention. A JIT budget manager monitors fleet-wide token consumption and autonomously throttles agent frequencies as resource limits approach, preserving output quality by reducing run count rather than degrading the model or prompt depth.
 
-This repository documents the architecture, design decisions, and operational patterns. Fifteen fully functional example agents are included — copy-paste ready, no API keys required.
+This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Fifteen additional agent specs are included in `examples/` as prompt-only references.
+
+---
+
+## Running the Reference Agents
+
+Three agents ship as runnable Python modules backed by the Anthropic Messages API, with GitHub Actions workflows for scheduled execution.
+
+| Agent | Schedule | Output |
+|-------|----------|--------|
+| [`research_digest`](agents/research_digest/) | Daily 11:00 UTC | Synthesis of noteworthy AI/ML developments |
+| [`market_monitor`](agents/market_monitor/) | Every 8h | Crypto market snapshot + narrative |
+| [`fleet_watchdog`](agents/fleet_watchdog/) | Every 6h | Fleet health report from GitHub Actions run history |
+
+### Local
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env  # fill in ANTHROPIC_API_KEY, SLACK_BOT_TOKEN, SLACK_DEFAULT_CHANNEL
+PYTHONPATH=. python agents/research_digest/agent.py
+```
+
+### CI
+
+Set these as [repository secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions):
+
+- `ANTHROPIC_API_KEY`
+- `SLACK_BOT_TOKEN`
+- `SLACK_DEFAULT_CHANNEL`
+
+The workflows under `.github/workflows/` will then run on their cron schedules. `ci.yml` runs the test suite on every push.
+
+### Tests
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
 
 ---
 
