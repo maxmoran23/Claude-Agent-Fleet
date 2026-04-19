@@ -10,7 +10,32 @@ A reference architecture for operating multiple autonomous agents as a cohesive 
 
 Every agent is a structured natural language prompt executed on a schedule. Agents gather live data from external sources, maintain persistent memory across runs via Slack Canvases and a SQLite data layer, rate their own output quality, and — when something breaks — repair themselves without human intervention. A JIT budget manager monitors fleet-wide token consumption and autonomously throttles agent frequencies as resource limits approach, preserving output quality by reducing run count rather than degrading the model or prompt depth.
 
-This repository documents the architecture, design decisions, and operational patterns. Three fully functional example agents are included — copy-paste ready, no API keys required. Production agent configurations running on top of this framework are maintained separately.
+This repository documents the architecture, design decisions, and operational patterns. Fifteen fully functional example agents are included — copy-paste ready, no API keys required.
+
+---
+
+## Why This Matters
+
+Most approaches to "agent systems" fall into one of two failure modes:
+
+1. **Monolithic prompts** — a single agent with a giant prompt trying to do everything. Brittle, unobservable, hard to evolve.
+2. **Orchestration-heavy frameworks** — tightly coupled pipelines with complex state machines. High cognitive overhead for operators; cascading failures when any link breaks.
+
+This framework takes a different path: **loosely coupled agents that communicate through shared state, each following a common production pattern, collectively forming a self-observing and self-repairing system**. The outcome is a fleet that can scale from 3 agents to 50+ without the operator rebuilding the orchestration every time, that fails gracefully rather than catastrophically, and that produces an audit trail of its own evolution.
+
+The patterns here emerged from building and operating such a system in production — refined through cycles of iteration under real resource constraints and real operator attention budgets. Everything in this repository is battle-tested architecture, generalized for reuse.
+
+---
+
+## Who This Is For
+
+- **Builders** designing their own agent fleets and looking for architectural patterns that have survived production pressure
+- **Engineers** evaluating how autonomous agent systems can be structured, observed, and maintained at scale
+- **Compliance and fintech practitioners** specifically — the examples skew toward regulatory, on-chain, and market-intelligence use cases because that's where the patterns were battle-tested
+- **Claude Code users** looking for reference implementations beyond single-agent examples
+- **AI infrastructure engineers** thinking about cost management, observability, and fault isolation in agent systems
+
+If you're building a fleet of 3+ agents that need to run autonomously on a schedule and produce reliable output, this framework maps directly to your problem. If you're building a single agent or a one-shot tool, this is probably more framework than you need.
 
 ---
 
@@ -78,38 +103,70 @@ Full architecture documentation: **[ARCHITECTURE.md](ARCHITECTURE.md)**
 
 ---
 
-## System Capabilities
+## Core Patterns
 
-### Visual Dashboard System
-Agents embed dynamic PNG image cards in Slack posts — score gauges, market dashboards, alert cards, fleet status overviews, pipeline funnels, action-package cards. Generated on-the-fly by serverless endpoints using Satori (JSX-to-SVG) + Sharp (SVG-to-PNG). Agents construct URLs with live data parameters; Slack renders inline. Dark theme throughout.
+Seven architectural patterns form the foundation of the framework. Each has its own deep-dive documentation:
 
-### Execution Scaffolding
-Agents can generate pre-filled action packages when findings cross defined thresholds. The pattern: the agent does all the preparation work, then hands a draft to the human for approval. Reduces 90% of the prep overhead while preserving human judgment on anything that creates external effects.
+| Pattern | What It Solves |
+|---------|----------------|
+| **[State Management](docs/patterns/state-management.md)** | Two-tier state (live canvases + append-only SQLite) so agents have memory across runs AND support historical queries |
+| **[Fallback Chains](docs/patterns/fallback-chains.md)** | Graceful source degradation so no agent hard-fails and observability survives broken inputs |
+| **[Quality Self-Rating](docs/patterns/quality-self-rating.md)** | Agents self-assess 1–10 per run, giving the operator a triage signal for what to read closely |
+| **[Execution Scaffolding](docs/patterns/execution-scaffolding.md)** | Threshold-triggered pre-filled action packages — agents do the prep, humans approve |
+| **[JIT Budget Management](docs/patterns/jit-budget-management.md)** | Autonomous throttle protocol that reduces run frequency under resource pressure (never quality) |
+| **[Self-Repair](docs/patterns/self-repair.md)** | Fleet agents scan configurations, detect drift, apply safe fixes autonomously |
+| **[Visual Cards](docs/patterns/visual-cards.md)** | Dynamic PNG cards embedded in Slack output for at-a-glance dense information |
 
-Example threshold-triggered handoffs:
-- Regulatory enforcement action above severity threshold → draft response brief with citations, impact analysis, and recommended internal escalation path
-- Opportunity detection with fit score above threshold → pre-researched application package (tailored bullets, cover letter draft, checklist)
-- Cross-domain synthesis scoring above threshold → full launch-ready concept brief with positioning, segments, and 30-day plan
+---
 
-Everything is a draft. Emoji reactions confirm, skip, or modify. A Feedback Harvester agent tracks execution outcomes to measure real-world impact.
+## Case Studies
 
-### JIT Budget Management
-The Watchdog agent doubles as an autonomous budget manager. It counts fleet-wide runs per week, projects burn rate against a configured target, and escalates through four throttle levels:
+End-to-end walkthroughs showing what the framework actually delivers:
 
-| Level | Trigger | Action |
-|-------|---------|--------|
-| NORMAL | On budget | All agents at baseline frequencies |
-| GREEN | Approaching limit | Pause luxury/research agents |
-| YELLOW | Over budget | Throttle high-frequency P2 agents (wider intervals) |
-| RED | Significant overshoot | Protect only core P0 agents at full schedule |
+| Case Study | What It Shows |
+|-----------|---------------|
+| **[Regulatory Enforcement Response](docs/case-studies/regulatory-enforcement-response.md)** | OFAC action breaks → oracle drafts brief → scaffold generates response kit → operator approves in minutes |
+| **[On-Chain Sanctions Hit](docs/case-studies/onchain-sanctions-hit.md)** | Monitored address triggers alert → watchlist enriches with typology → critical escalation + incident response package |
+| **[Daily Intelligence Digest](docs/case-studies/daily-intelligence-digest.md)** | Six agents consolidate into a single 500-word morning brief the operator reads in four minutes |
+| **[Agent Self-Repair](docs/case-studies/agent-self-repair.md)** | Watchdog detects degraded agent → auto-repair diagnoses → fix applied → validated — zero operator time |
 
-De-escalation is automatic — when burn rate drops, agents restore to baseline. Manual override available via DM. The key design principle: **reduce frequency, never reduce model or prompt quality.** Output stays the same; it just arrives less often.
+---
 
-### Structured Data Layer
-Beyond real-time dashboards (Slack Canvases, overwritten each run), a SQLite database serves as the permanent historical record — tables covering fleet metrics, market snapshots, predictions, portfolio state, regulatory events, and agent performance. Designed to be migration-compatible with hosted databases when ready to scale.
+## Example Agents
 
-### Conversational Interface
-A Fleet Query agent monitors for questions on an interval, reads state stores, channels, and the SQLite data layer, and replies in-thread with data-cited answers. Self-documenting help system with domain menu.
+Fifteen fully functional example agents, organized by complexity. Each includes a complete `AGENT.md` with the full production pattern — state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence.
+
+### Entry-level (demonstrates the basic production pattern)
+
+| Agent | Domain | Demonstrates |
+|-------|--------|-------------|
+| [Research Digest](examples/research-digest/AGENT.md) | AI/ML research | Structured prompt + severity-rated findings |
+| [Headline Flash](examples/headline-flash/AGENT.md) | Breaking news | Real-time intelligence drops, Twitter-style brevity |
+| [Market Pulse](examples/market-pulse/AGENT.md) | Crypto markets | Multi-source data aggregation, snapshot pattern |
+
+### Intermediate (state management, multi-source, consolidation)
+
+| Agent | Domain | Demonstrates |
+|-------|--------|-------------|
+| [Market Monitor](examples/market-monitor/AGENT.md) | Crypto markets | State deltas across runs, narrative synthesis |
+| [Regulatory Oracle](examples/regulatory-oracle/AGENT.md) | Regulatory/AML | Cross-jurisdictional tracking, deadline awareness |
+| [Calendar Alerts](examples/calendar-alerts/AGENT.md) | Compliance deadlines | Time-sensitive routing to external calendar |
+| [Daily Intelligence Brief](examples/daily-intelligence-brief/AGENT.md) | Cross-domain | Multi-agent consolidation, morning-digest synthesis |
+| [Meeting Prep](examples/meeting-prep/AGENT.md) | Workflow | Context aggregation, attendee research |
+
+### Advanced (sophisticated patterns)
+
+| Agent | Domain | Demonstrates |
+|-------|--------|-------------|
+| [Fleet Watchdog](examples/fleet-watchdog/AGENT.md) | Fleet ops | Fleet self-monitoring, missed-run detection |
+| [On-Chain Watchlist](examples/onchain-watchlist/AGENT.md) | Blockchain compliance | Address monitoring, sanctions screening, typology flagging |
+| [Synthesis Engine](examples/synthesis-engine/AGENT.md) | Cross-agent meta | Cross-cutting theme detection, contradiction flagging |
+| [Alpha Lab](examples/alpha-lab/AGENT.md) | DeFi analytics | Protocol risk monitoring, TVL shift detection |
+| [Execution Scaffold](examples/execution-scaffold/AGENT.md) | Human-in-loop | Threshold-triggered action packages, reaction schema |
+| [Fleet Auto-Repair](examples/fleet-auto-repair/AGENT.md) | Fleet ops | Autonomous self-healing, config scanning |
+| [Fleet Query](examples/fleet-query/AGENT.md) | Conversational | Multi-source retrieval, data-cited answers |
+
+See **[QUICKSTART.md](QUICKSTART.md)** for deploying any of these as a Claude Code scheduled task.
 
 ---
 
@@ -121,16 +178,16 @@ A Fleet Query agent monitors for questions on an interval, reads state stores, c
 | State | Slack Canvases as persistent stores | Human-readable, agent-writable, survives restarts, no database required |
 | Historical data | SQLite append-only layer | Canvases are dashboards (current state); SQLite is the ledger (what was true on date X) |
 | Coupling | Zero file dependencies between agents | Any agent can fail without cascading — total fault isolation |
-| Delivery | Consolidated multi-app pipeline | Slack (backbone) + digest emails (2x daily) + calendar (iOS push) |
+| Delivery | Consolidated multi-app pipeline | Slack (backbone) + digest emails + calendar (iOS push) |
 | Observability | Fleet agents, not external tools | The fleet monitors itself using the same architecture it runs on |
 | Self-repair | Autonomous, not alerting-only | Auto-Repair fixes problems, not just flags them |
 | Budget | JIT throttle protocol | Reduce run frequency, never model quality — graceful degradation under resource pressure |
 
 ---
 
-## Production Patterns
+## Production Pattern
 
-Every agent follows the same execution cycle — see **[FLEET-OPS.md](FLEET-OPS.md)** for full documentation.
+Every agent follows the same execution cycle — documented in **[FLEET-OPS.md](FLEET-OPS.md)**:
 
 ```
 STEP 0        STEPS 1-5      STEP 6        STEP 6.5       STEP 7
@@ -140,62 +197,68 @@ Load State -> Execute ------> Deliver ----> Write Data --> Persist State
                self-rate)      DB, email)                   quality score)
 ```
 
-- **Fallback chains** — every source has graceful degradation; no agent hard-fails
-- **Quality self-assessment** — agents rate their own output 1-10, flag degraded runs
-- **Health footers** — every output includes sources used, fallbacks triggered, quality score, runtime
-- **Structured data bus** — all findings (severity >= MEDIUM) written to shared database
-- **Escalation routing** — CRITICAL findings bypass normal channels, go direct to alerts + DM
-- **JIT-aware** — agents operate within a budget-managed framework; frequency adjusts, quality doesn't
+Key properties enforced across every agent:
+
+- **Fallback chains** — every source has graceful degradation
+- **Quality self-assessment** — agents rate their own output 1-10
+- **Health footers** — every output includes sources used, fallbacks triggered, quality score
+- **Structured data bus** — findings (severity >= MEDIUM) written to shared archive
+- **Escalation routing** — CRITICAL findings bypass normal channels, go direct to alerts
+- **JIT-aware** — agents operate within a budget-managed framework
 
 ---
 
-## Architecture Evolution
+## Schemas & Reference
 
-The framework's current form reflects decisions that were iterated, not planned. Three structural lessons worth calling out for anyone building in this direction:
-
-**Delivery consolidation.** Early iterations had many agents each sending individual emails, syncing notes, posting to channels. Volume was working against utility — too many touchpoints caused notification fatigue. The current architecture consolidates all email delivery into a single aggregator (2 emails per day), with Slack as the primary backbone and calendar for time-sensitive pushes. Fewer notifications, same information density.
-
-**JIT budget management.** Running many agents on a premium model at naive frequencies burns token budget fast. A token consumption diagnostic typically reveals that a small number of high-frequency agents consume a disproportionate share, much of it on fast-exit no-ops. Reorganizing the fleet into priority tiers and autonomously throttling frequencies as limits approach reduces run count dramatically without touching model selection or prompt depth. Only how often agents run changes, never what they do when they run.
-
-**State layer separation.** Using only real-time dashboards for state works for live monitoring but makes historical queries impossible (each run overwrites the dashboard). Adding an append-only SQLite layer creates a two-tier system: dashboards for live state, database for permanent history. "What's the current value?" queries the dashboard; "what was it doing last Tuesday?" queries the database.
-
----
-
-## Try It Yourself
-
-Three fully functional example agents are included — copy-paste ready, no API keys required, immediately deployable as Claude Code scheduled tasks.
-
-| Example | What It Does | Complexity |
-|---------|-------------|-----------|
-| **[Research Digest](examples/research-digest/AGENT.md)** | Daily AI/ML research briefing with severity-rated findings | Entry-level |
-| **[Market Monitor](examples/market-monitor/AGENT.md)** | Crypto market snapshots with sentiment analysis and state deltas | Intermediate |
-| **[Fleet Watchdog](examples/fleet-watchdog/AGENT.md)** | Auto-discovers and monitors other agents' health, flags failures | Advanced |
-
-Each agent demonstrates the full production pattern: state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence. See **[QUICKSTART.md](QUICKSTART.md)** for setup instructions.
-
-These examples are functional starting points. Any production fleet built on top of this framework will include additional infrastructure (multi-canvas state management, cross-agent enrichment, visual card integration, data layer writes, JIT budget awareness) layered on top of these primitives.
+- **[Data Layer Schema](schemas/data-layer.sql)** — SQLite DDL for the historical archive
+- **[Slack Canvas Structure](schemas/slack-canvas-structure.md)** — state-store canvas conventions
+- **[Notion Intelligence Feed](schemas/notion-intelligence-feed.md)** — archive database schema
+- **[Agent Skill Frontmatter](schemas/agent-skill-frontmatter.md)** — AGENT.md frontmatter specification
 
 ---
 
 ## Repository Structure
 
 ```
-├── README.md                                    # This file
-├── ARCHITECTURE.md                              # System design, state management, data flow
-├── FLEET-OPS.md                                 # Operational patterns, observability, self-repair
-├── QUICKSTART.md                                # Deploy an example agent in 5 minutes
+Claude-Agent-Fleet/
+├── README.md                             # This file
+├── ARCHITECTURE.md                       # System design, state management, data flow
+├── FLEET-OPS.md                          # Operational patterns, observability, self-repair
+├── QUICKSTART.md                         # Deploy an example agent in 5 minutes
+├── CONTRIBUTING.md                       # Contribution guidelines
+├── CHANGELOG.md                          # Version history
+├── LICENSE                               # MIT
 │
-├── examples/                                    # Fully functional, copy-paste ready agents
-│   ├── research-digest/AGENT.md                 # AI/ML research briefing agent
-│   ├── market-monitor/AGENT.md                  # Crypto market intelligence agent
-│   └── fleet-watchdog/AGENT.md                  # Fleet health monitoring agent
+├── examples/                             # 15 fully functional agents
+│   ├── research-digest/                  # Entry-level
+│   ├── headline-flash/                   # Entry-level
+│   ├── market-pulse/                     # Entry-level
+│   ├── market-monitor/                   # Intermediate
+│   ├── regulatory-oracle/                # Intermediate
+│   ├── calendar-alerts/                  # Intermediate
+│   ├── daily-intelligence-brief/         # Intermediate
+│   ├── meeting-prep/                     # Intermediate
+│   ├── fleet-watchdog/                   # Advanced
+│   ├── onchain-watchlist/                # Advanced
+│   ├── synthesis-engine/                 # Advanced
+│   ├── alpha-lab/                        # Advanced
+│   ├── execution-scaffold/               # Advanced
+│   ├── fleet-auto-repair/                # Advanced
+│   └── fleet-query/                      # Advanced
 │
-└── docs/examples/                               # Structural references
-    ├── structural-reference-agent.md            # Annotated template showing agent anatomy
-    └── report-template-reference.html           # HTML report template with styling patterns
+├── docs/
+│   ├── patterns/                         # 7 deep-dive pattern docs
+│   ├── case-studies/                     # 4 end-to-end case studies
+│   └── examples/                         # Structural references
+│
+└── schemas/                              # 4 schema & reference docs
+    ├── data-layer.sql
+    ├── slack-canvas-structure.md
+    ├── notion-intelligence-feed.md
+    └── agent-skill-frontmatter.md
 ```
 
-Production agent configurations, skills libraries, serverless endpoints, data layers, and operational data built on top of this framework are maintained separately.
+Production agent configurations, skills libraries, serverless endpoints, and operational data built on top of this framework are maintained separately.
 
 ---
 
@@ -204,3 +267,7 @@ Production agent configurations, skills libraries, serverless endpoints, data la
 This framework emerged from building and operating a production autonomous agent fleet at the intersection of crypto/AML regulatory work and hands-on AI agent system design. The compliance background shapes how the framework is structured — audit-defensible documentation, structured severity frameworks, escalation protocols, and systematic evidence-based analysis are native operating principles, not afterthoughts bolted onto an AI project.
 
 Actively used in production and continues to evolve.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

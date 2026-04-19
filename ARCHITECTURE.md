@@ -1,20 +1,55 @@
 # Architecture
 
-System design documentation for the Claude Agent Fleet — a 50-agent autonomous system built on Claude Code.
+System design documentation for the Claude Agent Fleet — a framework for running autonomous agent fleets on Claude Code.
 
 ---
 
-## Design Philosophy
+## Design Principles
 
-Four principles guided every architectural decision:
+Four principles guide every architectural decision. They compound — the framework's value comes from all four holding simultaneously.
 
-1. **Zero-infrastructure** — no servers, no databases (beyond a local SQLite file), no deployment pipelines. The system runs on Claude Code scheduled tasks and commodity SaaS tools.
+### 1. Zero-infrastructure
 
-2. **Self-contained agents** — every agent is a complete, independent unit. No agent depends on another agent's files, output, or availability. Any agent can fail, be modified, or be removed without cascading effects.
+No servers, no databases (beyond a local SQLite file), no deployment pipelines. The system runs on Claude Code scheduled tasks and commodity SaaS tools (Slack, optionally Gmail, optionally Notion). A fleet can be deployed, operated, and extended without standing up any new infrastructure.
 
-3. **The fleet maintains itself** — observability, repair, evolution, and budget management are not bolted-on afterthoughts. They are agents in the fleet, running the same architecture, following the same patterns.
+### 2. Self-contained agents
 
-4. **Degrade gracefully under pressure** — whether a data source goes down or the token budget gets tight, the system reduces scope rather than failing. Fallback chains handle source outages. JIT budget management handles resource limits. Output quality is sacred; frequency is the lever.
+Every agent is a complete, independent unit. No agent depends on another agent's files, output, or availability. Any agent can fail, be modified, or be removed without cascading effects. Cross-agent communication happens through shared state stores (Slack Canvases, SQLite tables) rather than direct calls.
+
+This is what lets a fleet scale from 3 agents to 30+ without the operator rebuilding orchestration. Each agent is a drop-in unit.
+
+### 3. The fleet maintains itself
+
+Observability, repair, evolution, and budget management are not bolted-on afterthoughts. They are agents in the fleet, running the same architecture, following the same patterns. The Watchdog watches the fleet. The Auto-Repair agent fixes the fleet. The Synthesis Engine makes sense of the fleet. All of them are just agents.
+
+This principle means: the fleet scales without the operator adding orchestration layers. New operational capability is added by adding more agents.
+
+### 4. Degrade gracefully under pressure
+
+Whether a data source goes down or the token budget gets tight, the system reduces scope rather than failing. Fallback chains handle source outages. JIT budget management handles resource limits. Output quality is sacred; frequency is the lever.
+
+This is non-negotiable: under pressure, the fleet produces less output at the same quality, never more output at lower quality.
+
+---
+
+## Pattern Deep-Dives
+
+The architectural patterns that implement these principles are documented individually:
+
+- **[State Management](docs/patterns/state-management.md)** — two-tier state (canvases + SQLite)
+- **[Fallback Chains](docs/patterns/fallback-chains.md)** — graceful source degradation
+- **[Quality Self-Rating](docs/patterns/quality-self-rating.md)** — per-run self-assessment
+- **[Execution Scaffolding](docs/patterns/execution-scaffolding.md)** — threshold-triggered action packages
+- **[JIT Budget Management](docs/patterns/jit-budget-management.md)** — autonomous throttle protocol
+- **[Self-Repair](docs/patterns/self-repair.md)** — autonomous configuration healing
+- **[Visual Cards](docs/patterns/visual-cards.md)** — inline PNG dashboard cards
+
+And the schemas that define the framework's data contracts:
+
+- **[Data Layer Schema](schemas/data-layer.sql)**
+- **[Slack Canvas Structure](schemas/slack-canvas-structure.md)**
+- **[Notion Intelligence Feed](schemas/notion-intelligence-feed.md)**
+- **[Agent Skill Frontmatter](schemas/agent-skill-frontmatter.md)**
 
 ---
 
@@ -28,7 +63,7 @@ Four principles guided every architectural decision:
 │  │              SCHEDULED TASK ENGINE                        │   │
 │  │                                                          │   │
 │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐           │   │
-│  │  │Task 1  │ │Task 2  │ │Task 3  │ │Task N  │  (46)     │   │
+│  │  │Task 1  │ │Task 2  │ │Task 3  │ │Task N  │           │   │
 │  │  │cron:8h │ │cron:4h │ │cron:1d │ │cron:20m│           │   │
 │  │  └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘           │   │
 │  │      │          │          │          │                  │   │
@@ -208,13 +243,13 @@ The delivery pipeline has been consolidated through iteration. The current archi
 | **SQLite** | Structured historical archive — queryable by Fleet Query |
 | **Notion** | Severity-tagged findings database — cross-agent data bus |
 
-**Delivery consolidation history:** Individual email agents (7+) were replaced by a single Email Digest Aggregator that reads all Slack channel activity and produces 2 HTML emails per day. Apple Notes was removed as a delivery channel (notification fatigue). This reduced daily touchpoints while maintaining information density.
+**Delivery consolidation pattern:** Multiple individual email agents can be replaced by a single digest aggregator agent that reads all Slack channel activity and produces consolidated HTML emails on a fixed cadence (e.g., morning + evening). This reduces daily touchpoints while maintaining information density — fewer notifications delivering the same intelligence.
 
 ---
 
 ## JIT Budget Management Architecture
 
-The fleet runs on Opus 4.6 (1M context) for all agents — no model downgrades, no prompt trimming. The budget lever is frequency, not quality.
+The fleet runs on a single premium model configuration across all agents — no model downgrades, no prompt trimming. The budget lever is frequency, not quality.
 
 ```
 WATCHDOG (4x/day)

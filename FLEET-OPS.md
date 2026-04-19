@@ -225,7 +225,7 @@ Any agent can trigger any severity level. The Smart Thread Responder cross-refer
 Adding a new agent to the fleet follows a repeatable process:
 
 1. Create agent directory with configuration file (fully self-contained instructions)
-2. Add HTML report template (if Cortex-type agent)
+2. Add HTML report template (if the agent produces standalone HTML reports)
 3. Create scheduled task with appropriate cron schedule and priority tier assignment
 4. Assign to Slack channel and display canvas section
 5. Add state store section for persistent memory
