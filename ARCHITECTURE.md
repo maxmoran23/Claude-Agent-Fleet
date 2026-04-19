@@ -131,7 +131,7 @@ LAYER 1: SOURCES (12+)
     Calendar ──────────┘
 
 LAYER 2: PROCESSING
-    50 agents analyze, synthesize, cross-reference
+    Agents analyze, synthesize, cross-reference
 
 LAYER 3: OUTPUT ROUTING
     ┌──> Slack topic channels (full reports, threaded)

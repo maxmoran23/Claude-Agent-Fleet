@@ -192,13 +192,13 @@ De-escalation is automatic when burn rate drops. Manual override available via D
 
 ### Design Rationale
 
-The JIT system exists because running 50 agents on Opus 4.6 at naive frequencies would consume ~1,900 runs/week. A token consumption diagnostic identified that:
+The JIT system exists because running a large agent fleet on a premium model at naive frequencies burns through token budget fast. A typical token consumption diagnostic reveals:
 
-- A single agent (interactive Q&A, originally at 5-minute intervals) accounted for 63% of all runs
-- Several research/enrichment agents ran daily but produced near-identical output on consecutive days
-- Some agents duplicated each other's work (4 agents surfacing the same prices in the same morning window)
+- A small number of high-frequency agents (interactive Q&A, short-interval monitors) account for a disproportionate share of runs — often the majority
+- Several research/enrichment agents run daily but produce near-identical output on consecutive days
+- Some agents duplicate each other's work (multiple agents surfacing the same data in overlapping time windows)
 
-Optimizing frequencies — without changing any model, prompt, or output format — reduced the fleet to ~800 runs/week. The JIT protocol ensures this stays sustainable even as new agents are added or usage patterns shift.
+Optimizing frequencies — without changing any model, prompt, or output format — dramatically reduces weekly run count. The JIT protocol ensures this stays sustainable as new agents are added or usage patterns shift.
 
 ---
 
