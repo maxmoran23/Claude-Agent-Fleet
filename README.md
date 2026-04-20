@@ -1,5 +1,9 @@
 # Claude Agent Fleet
 
+[![ci](https://github.com/maxmoran23/Claude-Agent-Fleet/actions/workflows/ci.yml/badge.svg)](https://github.com/maxmoran23/Claude-Agent-Fleet/actions/workflows/ci.yml)
+[![python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
+[![license](https://img.shields.io/github/license/maxmoran23/Claude-Agent-Fleet)](LICENSE)
+
 **A production-grade framework for building, scheduling, and operating autonomous agent fleets on Claude. Self-repairing, self-budgeting, with runnable Python reference implementations.**
 
 ---
