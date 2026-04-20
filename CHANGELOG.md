@@ -12,6 +12,36 @@ Framework continues to evolve. See commit history for in-progress changes.
 
 ---
 
+## [1.1.0] — 2026-04-20
+
+Runnable Python reference implementations and full engineering scaffolding.
+
+### Added
+
+- `fleet_core/` shared library — config loader, Anthropic runner, Slack publisher
+- Three runnable reference agents with prompts and per-agent READMEs:
+  - `agents/research_digest/` — daily AI/ML research synthesis
+  - `agents/market_monitor/` — crypto market snapshot and narrative
+  - `agents/fleet_watchdog/` — fleet health report via GitHub Actions run history
+- GitHub Actions workflows:
+  - `ci.yml` — runs `pytest` on every push and PR
+  - `research-digest.yml` — daily 11:00 UTC cron
+  - `market-monitor.yml` — every 8h cron
+  - `fleet-watchdog.yml` — every 6h cron (offset)
+- Test suite — 18 unit and integration tests covering config, runner, publisher, and all three agents
+- `pyproject.toml` with `setuptools` build backend and `ruff` + `pytest` configuration
+- Pre-commit hooks (`ruff` format and lint, trailing whitespace, YAML/TOML validation)
+- Dependabot configuration for `pip` and `github-actions` (weekly)
+- Issue templates (bug, feature) and pull request template
+- `CODEOWNERS`
+- README badges: CI status, Python version, license
+
+### Changed
+
+- README reframed from "zero traditional code" to include runnable Python reference implementations alongside the prompt-only agent specs in `examples/`
+
+---
+
 ## [1.0.0] — 2026-04-19
 
 First publicly-documented release of the framework as a reference architecture.
