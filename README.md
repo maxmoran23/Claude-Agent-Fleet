@@ -268,9 +268,36 @@ Claude-Agent-Fleet/
 ├── QUICKSTART.md                         # Deploy an example agent in 5 minutes
 ├── CONTRIBUTING.md                       # Contribution guidelines
 ├── CHANGELOG.md                          # Version history
+├── CODEOWNERS                            # Default reviewer
 ├── LICENSE                               # MIT
+├── pyproject.toml                        # Python project metadata + ruff/pytest config
+├── requirements.txt                      # Runtime dependencies
+├── .env.example                          # Template for local secrets
+├── .pre-commit-config.yaml               # Formatting + lint hooks
 │
-├── examples/                             # 15 fully functional agents
+├── fleet_core/                           # Shared library used by all runnable agents
+│   ├── config.py                         # Environment-backed config loader
+│   ├── runner.py                         # Anthropic Messages API wrapper
+│   └── publisher.py                      # Slack publishing helper
+│
+├── agents/                               # Runnable Python reference agents
+│   ├── research_digest/                  # Daily AI/ML research synthesis
+│   ├── market_monitor/                   # Crypto market snapshot + narrative
+│   └── fleet_watchdog/                   # Fleet health via GH Actions run history
+│
+├── tests/                                # 18 unit + integration tests
+│   ├── test_config.py
+│   ├── test_runner.py
+│   ├── test_publisher.py
+│   └── test_agents.py
+│
+├── .github/
+│   ├── workflows/                        # ci.yml + 3 scheduled agent workflows
+│   ├── ISSUE_TEMPLATE/                   # Bug and feature templates
+│   ├── pull_request_template.md
+│   └── dependabot.yml                    # Weekly pip + actions updates
+│
+├── examples/                             # 15 prompt-only agent specs (AGENT.md format)
 │   ├── research-digest/                  # Entry-level
 │   ├── headline-flash/                   # Entry-level
 │   ├── market-pulse/                     # Entry-level
