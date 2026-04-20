@@ -43,10 +43,14 @@ def collect_workflow_health() -> list[dict]:
                     "gh",
                     "run",
                     "list",
-                    "--repo", repo,
-                    "--workflow", workflow,
-                    "--limit", "5",
-                    "--json", "status,conclusion,createdAt,displayTitle",
+                    "--repo",
+                    repo,
+                    "--workflow",
+                    workflow,
+                    "--limit",
+                    "5",
+                    "--json",
+                    "status,conclusion,createdAt,displayTitle",
                 ],
                 env=env,
                 text=True,
@@ -54,7 +58,11 @@ def collect_workflow_health() -> list[dict]:
             )
             runs = json.loads(output)
             health.append({"workflow": workflow, "runs": runs})
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError) as err:
+        except (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            json.JSONDecodeError,
+        ) as err:
             logger.warning("could not query workflow=%s: %s", workflow, err)
             health.append({"workflow": workflow, "runs": [], "error": str(err)})
 

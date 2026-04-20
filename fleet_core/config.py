@@ -27,7 +27,7 @@ def load_config() -> Config:
     }
     missing = [k for k, v in required.items() if not v]
     if missing:
-        raise EnvironmentError(
+        raise OSError(
             f"Missing required env vars: {', '.join(missing)}. "
             "Copy .env.example to .env and fill in values, or set them "
             "as GitHub Actions secrets when running in CI."
