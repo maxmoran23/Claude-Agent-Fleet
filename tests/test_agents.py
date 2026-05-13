@@ -46,7 +46,6 @@ def test_research_digest_prompt_file_exists():
 @patch("fleet_core.publisher.WebClient")
 @patch("fleet_core.runner.Anthropic")
 def test_research_digest_main_posts_to_slack(mock_anthropic, mock_webclient, mock_env):
-    from unittest.mock import MagicMock
     mock_anthropic.return_value.messages.create.return_value = MagicMock(
         content=[MagicMock(type="text", text="digest body")],
         usage=MagicMock(input_tokens=1, output_tokens=2),
@@ -76,7 +75,6 @@ def test_market_monitor_prompt_file_exists():
 @patch("fleet_core.publisher.WebClient")
 @patch("fleet_core.runner.Anthropic")
 def test_market_monitor_main_posts_to_slack(mock_anthropic, mock_webclient, mock_env):
-    from unittest.mock import MagicMock
     mock_anthropic.return_value.messages.create.return_value = MagicMock(
         content=[MagicMock(type="text", text="market body")],
         usage=MagicMock(input_tokens=1, output_tokens=2),
@@ -93,6 +91,34 @@ def test_market_monitor_main_posts_to_slack(mock_anthropic, mock_webclient, mock
     posted = slack.chat_postMessage.call_args.kwargs["text"]
     assert "Market Monitor" in posted
     assert "market body" in posted
+
+
+# --- Regulatory Oracle -------------------------------------------------------
+
+
+def test_regulatory_oracle_prompt_file_exists():
+    assert (REPO_ROOT / "agents" / "regulatory_oracle" / "prompt.md").is_file()
+
+
+@patch("fleet_core.publisher.WebClient")
+@patch("fleet_core.runner.Anthropic")
+def test_regulatory_oracle_main_posts_to_slack(mock_anthropic, mock_webclient, mock_env):
+    mock_anthropic.return_value.messages.create.return_value = MagicMock(
+        content=[MagicMock(type="text", text="regulatory body")],
+        usage=MagicMock(input_tokens=1, output_tokens=2),
+        stop_reason="end_turn",
+        model="claude-opus-4-6",
+    )
+    slack = MagicMock()
+    slack.chat_postMessage.return_value = {"ts": "1.2", "ok": True}
+    mock_webclient.return_value = slack
+
+    from agents.regulatory_oracle.agent import main as oracle_main
+
+    assert oracle_main() == 0
+    posted = slack.chat_postMessage.call_args.kwargs["text"]
+    assert "Regulatory Oracle" in posted
+    assert "regulatory body" in posted
 
 
 # --- Fleet Watchdog ----------------------------------------------------------
@@ -113,13 +139,20 @@ def test_collect_workflow_health_returns_empty_when_no_token(monkeypatch):
 def test_collect_workflow_health_parses_gh_output(mock_check_output, monkeypatch):
     monkeypatch.setenv("GITHUB_TOKEN", "ghs-test")
     mock_check_output.return_value = json.dumps(
-        [{"status": "completed", "conclusion": "success", "createdAt": "2026-04-19T00:00:00Z", "displayTitle": "test"}]
+        [
+            {
+                "status": "completed",
+                "conclusion": "success",
+                "createdAt": "2026-04-19T00:00:00Z",
+                "displayTitle": "test",
+            }
+        ]
     )
 
     from agents.fleet_watchdog.agent import collect_workflow_health
 
     result = collect_workflow_health()
-    assert len(result) == 2  # one entry per tracked workflow
+    assert len(result) == 4  # one entry per tracked workflow
     assert all("runs" in entry for entry in result)
     assert all(len(entry["runs"]) == 1 for entry in result)
 
@@ -136,3 +169,39 @@ def test_collect_workflow_health_handles_gh_errors(mock_check_output, monkeypatc
     result = collect_workflow_health()
     assert all("error" in entry for entry in result)
     assert all(entry["runs"] == [] for entry in result)
+
+
+# --- Synthesis Engine --------------------------------------------------------
+
+
+def test_synthesis_engine_prompt_file_exists():
+    assert (REPO_ROOT / "agents" / "synthesis_engine" / "prompt.md").is_file()
+
+
+def test_synthesis_engine_collect_returns_empty_when_no_token(monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    from agents.synthesis_engine.agent import collect_fleet_run_history
+
+    assert collect_fleet_run_history() == []
+
+
+@patch("fleet_core.publisher.WebClient")
+@patch("fleet_core.runner.Anthropic")
+def test_synthesis_engine_main_posts_to_slack(mock_anthropic, mock_webclient, mock_env, monkeypatch):
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    mock_anthropic.return_value.messages.create.return_value = MagicMock(
+        content=[MagicMock(type="text", text="synthesis body")],
+        usage=MagicMock(input_tokens=1, output_tokens=2),
+        stop_reason="end_turn",
+        model="claude-opus-4-6",
+    )
+    slack = MagicMock()
+    slack.chat_postMessage.return_value = {"ts": "1.2", "ok": True}
+    mock_webclient.return_value = slack
+
+    from agents.synthesis_engine.agent import main as synthesis_main
+
+    assert synthesis_main() == 0
+    posted = slack.chat_postMessage.call_args.kwargs["text"]
+    assert "Fleet Synthesis" in posted
+    assert "synthesis body" in posted

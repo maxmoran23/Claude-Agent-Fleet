@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto AML Typology Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1a2847;
+            --bg-tertiary: #253858;
+            --text-primary: #e2e8f0;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            --accent-critical: #ef4444;
+            --accent-high: #f97316;
+            --accent-medium: #eab308;
+            --accent-info: #3b82f6;
+            --accent-success: #10b981;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #1e293b;
+            --text-tertiary: #475569;
+            --border-color: #cbd5e1;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .category-section {
+            margin-bottom: 28px;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-tertiary);
+        }
+
+        .category-count {
+            background-color: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-info);
+        }
+
+        .typology-list {
+            list-style: none;
+        }
+
+        .typology-item {
+            margin-bottom: 8px;
+        }
+
+        .typology-link {
+            display: block;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            border-left: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .typology-link:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-left-color: var(--accent-info);
+        }
+
+        .typology-link.active {
+            background-color: var(--bg-tertiary);
+            color: var(--accent-info);
+            border-left-color: var(--accent-info);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1440px;
+        }
+
+        .header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px;
+            sticky: 0;
+            z-index: 10;
+        }
+
+        .header-content {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-info);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 14px;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent-info);
+            color: var(--accent-info);
+        }
+
+        .filter-btn.active {
+            background-color: var(--accent-info);
+            border-color: var(--accent-info);
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .typology-detail {
+            display: none;
+        }
+
+        .typology-detail.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .typology-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .typology-header {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .typology-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--accent-info);
+            min-width: 50px;
+        }
+
+        .typology-title-section {
+            flex: 1;
+        }
+
+        .typology-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .typology-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .badge-critical {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--accent-critical);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-high {
+            background-color: rgba(249, 115, 22, 0.15);
+            color: var(--accent-high);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .badge-medium {
+            background-color: rgba(234, 179, 8, 0.15);
+            color: var(--accent-medium);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .badge-category {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--accent-info);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .description-text {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .indicator-list, .rule-list, .step-list {
+            list-style: none;
+            margin: 0;
+        }
+
+        .indicator-list li, .rule-list li, .step-list li {
+            padding: 10px 0;
+            padding-left: 16px;
+            border-left: 2px solid var(--border-color);
+            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .indicator-list li:before {
+            content: "⚠";
+            margin-right: 8px;
+            color: var(--accent-high);
+        }
+
+        .rule-list li:before {
+            content: "∅";
+            margin-right: 8px;
+            color: var(--accent-info);
+        }
+
+        .step-list li:before {
+            content: "→";
+            margin-right: 8px;
+            color: var(--accent-success);
+        }
+
+        .code-block {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            color: var(--accent-info);
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--accent-info);
+            color: white;
+            border-color: var(--accent-info);
+        }
+
+        .citation {
+            background-color: rgba(59, 130, 246, 0.05);
+            border-left: 3px solid var(--accent-info);
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 3px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .scenario-box {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .scenario-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .related-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .related-link {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--accent-info);
+            transition: all 0.2s;
+        }
+
+        .related-link:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent-info);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .no-results h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                max-height: 300px;
+            }
+
+            .header-content {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .typology-card {
+                padding: 16px;
+            }
+        }
+
+        @media print {
+            .sidebar, .header {
+                display: none;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .typology-card {
+                page-break-inside: avoid;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Typology Library</div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+
+            <div id="categoriesContainer"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div class="header">
+                <div class="header-content">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search typologies...">
+                    </div>
+                    <div class="filter-group">
+                        <button class="filter-btn" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="critical">Critical</button>
+                        <button class="filter-btn" data-filter="high">High</button>
+                        <button class="filter-btn" data-filter="medium">Medium</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content" id="contentArea">
+                <div class="no-results">
+                    <h3>Select a typology to begin</h3>
+                    <p>Use the sidebar or search to find crypto AML typologies</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const typologies = [
+            {
+                id: 1,
+                number: "01",
+                category: "Sanctions Evasion",
+                title: "Direct OFAC-Designated Address Interaction",
+                severity: "critical",
+                description: "Direct receipt of funds from, or transfer of funds to, a blockchain address explicitly designated by OFAC on the SDN (Specially Designated Nationals) or other sanctions lists. Wallet address matches OFAC list precisely; no chain analysis required.",
+                indicators: [
+                    "Wallet address matches OFAC SDN list entry verbatim (on-chain verification)",
+                    "Transaction timestamp post-OFAC designation date (on-chain)",
+                    "Multiple repeated deposits from/to sanctioned address over time (on-chain)",
+                    "Rapid conversion or movement within 24 hours of receipt (on-chain)",
+                    "No legitimate custodial or exchange wrapper (off-chain business records)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF wallet_address IN ofac_sdn_list AND transaction_timestamp > designation_date THEN flag_critical_match",
+                        threshold: "Single transaction (zero tolerance)",
+                        dataReq: "Real-time OFAC list sync, full transaction log",
+                        mitigation: "Verify address derivation method (multisig, contract, EOA); check for exchange deposit addresses misidentified"
+                    },
+                    {
+                        rule: "IF tx_count(to_designated_addr OR from_designated_addr) > 1 AND time_window < 30_days THEN escalate_to_sar_submission",
+                        threshold: "2+ transactions in 30 days",
+                        dataReq: "Historical transaction graph, customer KYC",
+                        mitigation: "Exclude exchange fee aggregation wallets; verify wallet owner legitimacy via exchange APIs"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Confirm address matches OFAC list (check OFAC.treas.gov SDN + BIS Entity List simultaneously); validate transaction hash on blockchain explorer; check transaction is confirmed (not pending/failed)",
+                    "ENRICHMENT: Query wallet clustering data to identify linked wallets; obtain OFAC license approvals via database; check customer KYC for connections to designated party or jurisdiction; retrieve transaction broadcast metadata (IP, VPN, node data)",
+                    "ATTRIBUTION: Cross-reference customer ID with PEP database; check if customer is US person or covered financial institution; verify wallet was not compromised (compare to customer's known wallet signatures); review customer transaction pattern for anomalies",
+                    "DISPOSITION: File Suspicious Activity Report (SAR) within 30 days of detection if no license granted; freeze account and assets if US person; escalate to OFAC for enforcement consultation if pattern suggests evasion attempt"
+                ],
+                regulatory: [
+                    "31 CFR § 501.806 – Real-time blocking of OFAC-designated transactions",
+                    "OFAC Enforcement Guidance on Sanctions Evasion (June 2020) – Direct transactions trigger presumption of evasion intent",
+                    "FinCEN Crypto Asset Guidance (Dec 2023) – Blockchain address cross-check with OFAC SDN mandatory for reporting entities",
+                    "OCC Bulletin 2023-61 – Cryptocurrency transaction monitoring requirements for national banks"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Wallets 0x1234...5678 (customer Acme Corp) sends $500k USDC to 0x9999...0000, which matches OFAC SDN entry for Iranian entity XYZ Org (designated March 2024). Detection flagged after 2 hrs; customer account frozen; SAR filed."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Address matches Kraken deposit address used by legitimate customer for cold storage sweeps. Verified via Kraken API deposit tag; customer in full compliance. Alert tuned to exclude known custodial addresses."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Designated entity's address 'dust attacked' with small balances by bad actor. Customer receives 0.001 BTC to their address via transaction batching; no intent to transact with designated party. Require manual review of sender intent; do not auto-SAR."
+                    }
+                ],
+                related: [2, 3, 4, 5]
+            },
+            {
+                id: 2,
+                number: "02",
+                category: "Sanctions Evasion",
+                title: "Sanctions Proximity (1-Hop & 2-Hop Chain Analysis)",
+                severity: "high",
+                description: "Funds flow through intermediary wallet(s) from/to OFAC-designated address. Not direct contact, but within 1–2 transaction hops on same blockchain. Suggests deliberate obfuscation or laundering of designated funds.",
+                indicators: [
+                    "1-hop or 2-hop connection to OFAC SDN address on same blockchain (on-chain graph analysis)",
+                    "Intermediary wallet shows no prior legitimate transaction history (on-chain)",
+                    "Timing clustering: intermediary wallet receives and forwards within 30 mins–2 hours (on-chain)",
+                    "Intermediary wallet address re-used only 1–2 times total (on-chain)",
+                    "No mixing/coinjoin; direct linear flow to/from designated address (on-chain)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF wallet_hops_from(customer_wallet, ofac_addr) <= 2 AND time_to_forward < 2_hours THEN flag_high_proximity",
+                        threshold: "Minimum 1-hop connection",
+                        dataReq: "Graph traversal engine, transaction velocity analysis",
+                        mitigation: "Exclude legitimate exchange/bridge smart contract addresses; verify intermediary is custodial (known safe list)"
+                    },
+                    {
+                        rule: "IF intermediary_wallet.age < 7_days AND intermediary_wallet.transaction_count < 3 AND proximity_to_ofac < 2 THEN escalate_review",
+                        threshold: "New wallet (< 7 days old) with minimal activity",
+                        dataReq: "Address creation timestamp, full tx history",
+                        mitigation: "Check if intermediary is new contract deployment (benign); correlate with customer known addresses"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Map full transaction chain from customer to OFAC address (BFS on blockchain); confirm hop count and timings; verify OFAC status current as of transaction date; check for circular flows (self-loops)",
+                    "ENRICHMENT: Cluster intermediary wallet(s) to identify parent entity; check cluster enrichment for previous suspicious activity; query blockchain explorer tags (mixer/exchange/etc.); obtain intermediary wallet KYC if available (off-chain source)",
+                    "ATTRIBUTION: Correlate intermediary wallet timing with customer's transaction pattern; check if customer has history of hop-chain usage; verify if intermediary linked to professional service provider (bridge, DEX, custodian) vs. personal wallet",
+                    "DISPOSITION: If intermediary is custodial gateway, lower risk; if personal wallet with timing indicative of evasion, escalate to SAR; consider transaction blocking if nexus to designated jurisdiction confirmed"
+                ],
+                regulatory: [
+                    "FATF Rec. 16 (Targeted Financial Sanctions) – Secondary sanctions liability for facilitators",
+                    "FinCEN Guidance on Virtual Asset Transfers (2020) – Recordkeeping requirements for intermediary transactions",
+                    "Executive Order 14024 (Russia Sanctions Expansion, April 2022) – Expanded secondary sanctions authority",
+                    "OCC SR Letter 20-17 – Third-party transaction facilitation risk management"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer wallet sends 10 ETH → Intermediary Wallet A (age 2 days) → OFAC-designated address (Russian entity). Intermediary used once, then dormant. Timeline: 45 mins from send to forward. SAR filed; account escalated."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Customer uses DEX aggregator (1inch Labs) which routes through multiple smart contracts. 2-hop path exists but intermediary is known smart contract. Risk score lowered based on smart contract whitelist; no escalation."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Legitimate bridge protocol (e.g., Stargate) shows 2-hop path to OFAC address on cross-chain transaction. Bridge is custodial; intermediary is known safe. Manual review confirms no evasion; no SAR."
+                    }
+                ],
+                related: [1, 3, 4]
+            },
+            {
+                id: 3,
+                number: "03",
+                category: "Sanctions Evasion",
+                title: "Tornado Cash / Mixer Usage Post-Designation",
+                severity: "critical",
+                description: "Customer deposits funds into Tornado Cash or other OFAC-designated mixing service post-March 2022 designation. Mixer breaks transaction graph and enables sanctions evasion. Usage after designation is particularly acute violation.",
+                indicators: [
+                    "Wallet deposits to Tornado Cash contract address post-March 2022 (on-chain, time-verified)",
+                    "Deposit amount is round number (0.1, 0.5, 1.0 ETH) or stablecoin multiples, typical of mixing intent (on-chain)",
+                    "Withdrawal from Tornado Cash occurs 24–72 hours post-deposit to unrelated wallet address (on-chain timing)",
+                    "Withdrawal address has no prior transaction history or weak KYC association (on-chain + off-chain)",
+                    "Multiple deposits to Tornado over weeks/months (pattern of ongoing obfuscation use)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF tx_to(tornado_cash_contract) AND timestamp > 2022_03_01 THEN flag_critical_mixing_violation",
+                        threshold: "Single transaction (zero tolerance)",
+                        dataReq: "Real-time contract interaction log, Tornado contract ABI verification",
+                        mitigation: "Verify customer funds did not pre-date designation (historic holdings); exclude legitimate privacy-seeking non-US customers (jurisdiction exception logic)"
+                    },
+                    {
+                        rule: "IF deposit_to_tornado + withdrawal_within_72h_to_new_addr AND pattern_repeats_> 2x THEN flag_structured_obfuscation",
+                        threshold: "2+ deposit-withdrawal cycles in 90 days",
+                        dataReq: "Mixer flow analysis, linked wallet identification",
+                        mitigation: "Whitelist known exchange withdrawal flows; require manual review of non-repeat users"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Confirm deposit is to official Tornado Cash contract (0x47CE0C6eD1B7a51f5f1D6dAFAfBf5a80ac8c62fE on Ethereum; validate on etherscan.io); verify timestamp post-designation; check if account was pre-existing (not new mule)",
+                    "ENRICHMENT: Trace withdrawal address(es) from Tornado using Chainalysis or Elliptic mixer-break clustering; attempt to link withdrawal wallet to customer identity; check if customer claimed 'privacy protection' in onboarding; review other transaction patterns for risk profile",
+                    "ATTRIBUTION: Determine customer's jurisdiction (US or US-adjacent high-risk); verify no legitimate business need for mixing (privacy coin arbitrage, etc.); check for repeated pattern (pattern = evasion intent); cross-check with sanctions investigation databases for connection to designated entities",
+                    "DISPOSITION: File SAR immediately if US person; escalate to OFAC for enforcement review; consider account closure; if non-US customer with legitimate privacy needs, apply enhanced monitoring but may not escalate to SAR"
+                ],
+                regulatory: [
+                    "31 CFR § 501.806 – Tornado Cash entity designation (March 8, 2022)",
+                    "OFAC FAQ 991 – Usage of designated mixer post-designation presumes evasion intent",
+                    "FinCEN Alert IC-000656 (Jan 2023) – Illicit Finance and Mixing Services Risk Advisory",
+                    "OCC Guidance on Cryptocurrency (2023) – Mixer usage as aggravating risk factor in transaction review"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "US customer deposits 5 ETH to Tornado Cash on April 15, 2023. Withdrawal traced to new address, then to OTC desk. SAR filed immediately; customer account frozen; referred to law enforcement."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "UK-based privacy researcher deposits small amount to Tornado to test Chainalysis tracing. No subsequent suspicious activity; jurisdiction exception applied; alert tuned out after manual review."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer claims funds were already in Tornado pre-designation; withdrawal post-March 2022. Requires forensic timestamp analysis (contract event logs); if pre-deposit confirmed, lower severity; if post-deposit, SAR mandatory."
+                    }
+                ],
+                related: [1, 2, 6]
+            },
+            {
+                id: 4,
+                number: "04",
+                category: "Sanctions Evasion",
+                title: "Jurisdictional Arbitrage (Russia, DPRK, Iran Nexus)",
+                severity: "high",
+                description: "Customer utilizes digital asset exchanges, OTC desks, or P2P networks physically located in or operating under sanctions-evasion regimes (Russia, DPRK, Iran). Cross-border fund flows suggest circumvention of geographic sanctions enforcement.",
+                indicators: [
+                    "Customer deposits to exchange operating from Russia, DPRK, or Iran, or known to service those jurisdictions (off-chain verification, regulatory filings)",
+                    "IP geolocation of customer login or deposit transaction shows match to sanctioned jurisdiction (on-chain + off-chain)",
+                    "Customer uses VPN or Tor to obfuscate jurisdiction origin (browser/network forensics)",
+                    "Deposits funded from non-custodial wallets; withdrawals to non-custodial wallets (on-chain indicator of peer-to-peer evasion)",
+                    "Transaction pattern matches known sanctions-evasion front-company behavior (velocity, amount, frequency)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF customer_counterparty IN [sanctioned_jurisdiction_exchanges] OR customer_ip_geoloc IN [russia, dprk, iran] THEN flag_high_jurisdiction_risk",
+                        threshold: "Single connection to high-risk entity/jurisdiction",
+                        dataReq: "Exchange registry, IP geolocation database, sanctions entity list",
+                        mitigation: "Whitelist major US/EU exchanges; verify IP geolocation confidence (>90%); exclude VPN users unless pattern matches evasion"
+                    },
+                    {
+                        rule: "IF customer_deposits_from_non_custodial_wallet AND deposit_to_high_risk_exchange AND withdrawal_to_non_custodial THEN escalate_review",
+                        threshold: "Full transaction cycle through sanctioned geography",
+                        dataReq: "Wallet type classification (EOA vs. contract), exchange KYC records",
+                        mitigation: "Require customer attestation of fund source; verify no nexus to designated entities"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Identify counterparty exchange/OTC desk location (business registration, regulatory filings); confirm sanctions status of jurisdiction; verify customer's stated residence vs. IP geolocation; check for VPN/proxy indicators",
+                    "ENRICHMENT: Query exchange against OFAC/FinCEN database for prior enforcement actions; pull customer KYC documentation to assess stated vs. actual jurisdiction; correlate IP geolocation with login patterns over time; check if customer funds sourced from legitimate employer or business in home country",
+                    "ATTRIBUTION: Determine if customer has legitimate business reason to use jurisdiction (e.g., tech developer with Russian employer); verify no connections to designated entities or front companies; assess transaction velocity and amounts for evasion pattern vs. normal trade activity",
+                    "DISPOSITION: If high-risk exchange (no AML program) and customer lacks legitimate nexus, escalate to SAR; require EDD if borderline (attestation letters, business documentation); block further deposits if pattern matches known sanctions evasion scheme"
+                ],
+                regulatory: [
+                    "31 CFR Part 501 (OFAC Sanctions Regulations) – Russia, DPRK, Iran Country Sanctions Programs",
+                    "OFAC FAQs 432–450 (Russia Sanctions) – Secondary sanctions for facilitators",
+                    "FinCEN Guidance on Virtual Assets (2019) – Geographic risk assessment for digital asset exchanges",
+                    "UN Security Council Resolutions 2270, 2321 (DPRK sanctions) – Monitoring for circumvention schemes"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer (claimed US resident) logs in via Russia IP, deposits funds to Russian exchange Garantex (known sanctions-evasion facilitator). Withdrawal then to Iran-nexus OTC desk. SAR filed for jurisdictional arbitrage."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Legitimate employee of US company subsidiary in Moscow uses company VPN (Russia IP) to deposit earnings. KYC verified; employer attestation obtained; transaction considered routine. Risk reduced; monitoring continues."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer's IP shows Russia location, but customer claims recent relocation and forgot to update VPN settings. Requires verification of actual residence (utility bill, banking records); if legitimacy confirmed, no escalation required."
+                    }
+                ],
+                related: [1, 2, 5]
+            },
+            {
+                id: 5,
+                number: "05",
+                category: "Sanctions Evasion",
+                title: "Nested Exchange / Instant Swap for Sanctions Circumvention",
+                severity: "high",
+                description: "Customer uses chain of fast swaps (DEX, aggregator, bridging protocols) to rapidly convert deposited funds into asset suitable for immediate off-ramp. Layers of swaps create transaction opacity and enable quick exit from AML monitoring scope.",
+                indicators: [
+                    "Deposit to exchange immediately followed by chain of swaps (DEX → Bridge → Another DEX) within minutes (on-chain timing)",
+                    "Swap pattern traverses multiple chains (Ethereum → Polygon → Arbitrum) in rapid succession (on-chain cross-chain tracking)",
+                    "Final asset is typically privacy coin (XMR, ZEC) or high-liquidity stablecoin exiting to unmonitored peer (on-chain asset type)",
+                    "Customer avoids KYC withdrawal gates by exiting to non-custodial wallet (on-chain + off-chain identity gap)",
+                    "Swap amounts are large relative to customer's typical transaction size (on-chain anomaly detection)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF deposit_to_customer_wallet THEN swap_chain_count(customer_wallet, end_timestamp - start_timestamp <= 5_min) > 2 THEN flag_high_opacity_intent",
+                        threshold: "2+ swaps in < 5 minutes",
+                        dataReq: "DEX transaction log, cross-chain bridge tracking",
+                        mitigation: "Exclude automated portfolio rebalancing (DeFi protocols with scheduled swaps); require manual review if privacy coin in swap chain"
+                    },
+                    {
+                        rule: "IF swap_destination_in [privacy_coins, xmr, zec] AND customer_profile NOT in_privacy_niche THEN escalate_suspicious_conversion",
+                        threshold: "Deviation from customer baseline (privacy coin swap for non-privacy-seeking customer)",
+                        dataReq: "Customer transaction history, asset class preferences",
+                        mitigation: "Allow if customer previously active in privacy coin trading; require attestation if new pattern"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Reconstruct full swap chain from deposit to final asset; verify each swap was executed by customer wallet (not delegated); obtain timestamps and amounts for each step; cross-check DEX routers (1inch, Uniswap, Curve, etc.) used",
+                    "ENRICHMENT: Map final asset destination (privacy coin held, further swaps, off-ramp attempt); check if customer has history of privacy coin trading or first-time usage (behavioral anomaly); verify no connection between customer and known sanctions-evasion networks",
+                    "ATTRIBUTION: Determine if swap pattern matches known evasion signature (rapid multi-chain jumps + privacy coin exit) or legitimate DeFi activity (rebalancing, yield chasing); review customer onboarding risk profile and transaction baseline",
+                    "DISPOSITION: If pattern matches evasion signature, monitor for withdrawal of privacy coin; file SAR if withdrawal to known sanctions-nexus peer; if legitimate DeFi activity, no escalation but add to customer risk profile for future monitoring"
+                ],
+                regulatory: [
+                    "FinCEN Guidance on Privacy-Enhancing Cryptocurrencies (2021) – XMR, ZEC as high-risk AML assets",
+                    "FATF Rec. 16 & 19 (Targeted Financial Sanctions + Cross-Border Transfers) – Traceability requirements across asset bridges",
+                    "OCC Bulletin 2021-21 – Digital Asset Transaction Monitoring (Privacy Coin Usage)"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer deposits $50k USDC, swaps to USDC-on-Polygon (1inch), then to Ethereum, then to XMR via DEX, and sends to non-KYC wallet. All steps < 3 mins. SAR filed for rapid opacity-seeking behavior."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "DeFi power user deposits funds, executes 4-swap strategy for yield farming (USDC → DAI → USDC on Curve as part of liquidity protocol). No privacy coin involved; customer has documented DeFi history. No escalation."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer new to platform; does single swap to test DEX (Ethereum → Polygon bridge). Moderate amounts; no privacy coin. Behavior pattern consistent with onboarding experimentation. Monitor but no immediate escalation."
+                    }
+                ],
+                related: [1, 2, 6]
+            },
+            {
+                id: 6,
+                number: "06",
+                category: "Money Laundering",
+                title: "Chain-Hopping (Cross-Chain Bridge Laundering)",
+                severity: "high",
+                description: "Illicit funds repeatedly bridged across blockchains (Ethereum → Polygon → Arbitrum → Optimism) to fragment transaction history and evade chain-specific AML monitoring. Each hop resets detection context on a new chain with potentially weaker oversight.",
+                indicators: [
+                    "Customer deposits on Ethereum; within 24h bridges same amount to Polygon, then Arbitrum, etc. (on-chain cross-chain tracking)",
+                    "Bridge amounts precisely match deposit amounts (no slippage); suggests pre-planning, not organic DeFi activity (on-chain amount matching)",
+                    "Customer wallet has no prior on-chain history on destination chain; no legitimate reason for chain presence (on-chain baseline comparison)",
+                    "Bridge routing avoids major security audits or official bridges (Stargate, Relay); uses lower-liquidity or newer bridges (on-chain bridge selection analysis)",
+                    "Final destination chain is low-AML-maturity jurisdiction (chain itself, not customer origin)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF bridge_tx_count(customer, time_window=7_days) >= 3 AND bridge_chain_sequence NOT in_defi_basket_strategy THEN flag_high_chain_fragmentation",
+                        threshold: "3+ distinct chain hops in 7 days",
+                        dataReq: "Cross-chain bridge transaction log, DeFi protocol classification",
+                        mitigation: "Whitelist legitimate DeFi multi-chain strategies (yield farming, liquidity provision across chains); require EDD if pattern matches evasion profile"
+                    },
+                    {
+                        rule: "IF bridge_destination_chain_liquidity_score < 0.4 AND bridge_frequency > 1_per_week THEN escalate_low_aml_arbitrage",
+                        threshold: "Repeated bridges to low-AML-maturity chains",
+                        dataReq: "Chain AML maturity scoring, bridge transaction frequency",
+                        mitigation: "Assess customer's legitimate business reason (e.g., developing dApp on target chain); if none, escalate to SAR"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Map complete cross-chain transaction graph (source chain → bridge protocol → destination chain); timestamp each hop; verify bridge contracts are official (check audit history, TVL, business registration); identify final destination chain and its AML regulatory environment",
+                    "ENRICHMENT: Cluster linked wallets on each destination chain; attempt to correlate destination wallet activity with customer identity (if possible); check if destination chains have known evasion-friendly regulatory status; query bridge protocols for any prior sanctions violations",
+                    "ATTRIBUTION: Assess if customer has legitimate multi-chain DeFi strategy (e.g., yield arbitrage across chains, native asset use); review customer profile for technical sophistication; determine if chain-hopping pattern matches known money-laundering signature (vs. organic DeFi participation)",
+                    "DISPOSITION: If legitimate multi-chain DeFi strategy with documented rationale, add to monitoring; if evasion-indicative pattern, file SAR and block further bridge transactions from customer; escalate to compliance committee if chain sequence suggests sanctions-jurisdiction nexus"
+                ],
+                regulatory: [
+                    "FATF Rec. 16 & 19 (Cross-Border Transfers) – Recordkeeping requirements extend to interoperability protocols",
+                    "FinCEN Guidance on Stablecoin Use and Cross-Chain Transfers (2023) – Bridge protocols subject to recordkeeping rules",
+                    "OCC Guidance on Operational Risk Management (2023) – Cross-chain monitoring as part of enterprise risk framework"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer deposits $100k USDC on Ethereum; bridges $100k (exact amount) to Polygon via Stargate (3 hrs); then bridges to Arbitrum (6 hrs); then to Optimism (12 hrs). No DeFi activity on any chain. SAR filed for chain-fragmentation layering."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Legitimate DeFi protocol developer bridges assets across 5 chains to deploy smart contracts and test liquidity pools. Transaction documentation shows business purpose; customer KYC verified. Risk scored lower; monitoring continues without escalation."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer bridges to Polygon (low-maturity AML environment) but has documented use case (local Polygon-based business). Requires verification of business legitimacy; if confirmed, bridge not escalated; if unverified, SAR filed."
+                    }
+                ],
+                related: [6, 7, 8]
+            },
+            {
+                id: 7,
+                number: "07",
+                category: "Money Laundering",
+                title: "Peel Chain / Structuring On-Chain",
+                severity: "medium",
+                description: "Illicit funds sent to primary wallet, then repeatedly subdivided and forwarded to multiple secondary wallets in amounts just under reporting thresholds or natural breakpoints. Designed to avoid transaction aggregation detection and create transaction obscurity.",
+                indicators: [
+                    "Single large deposit subdivided into 5+ smaller amounts within hours of receipt (on-chain transaction batching analysis)",
+                    "Subdivision amounts follow pattern (e.g., 0.99 BTC, 0.98 BTC, 0.97 BTC) or just-under-threshold values (on-chain amount distribution analysis)",
+                    "Each subdivided amount forwarded to unique address with no prior relationship (on-chain address clustering, no entity links)",
+                    "Secondary wallet addresses have minimal prior activity; likely created for this transaction series (on-chain wallet age analysis)",
+                    "No legitimate business reason for subdivision (e.g., not dividend payment, not payroll)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF deposit_amount > threshold AND subdivision_count >= 5 AND avg_subdivision_size < avg_historical_transaction THEN flag_medium_structuring_pattern",
+                        threshold: "5+ subdivisions from single deposit",
+                        dataReq: "Wallet transaction history, subdivision size distribution",
+                        mitigation: "Exclude known business payment processors (payroll, dividend systems); whitelist exchange payout batching"
+                    },
+                    {
+                        rule: "IF subdivision_amounts follow_numeric_pattern (e.g., stepped decrements) OR all_amounts < natural_threshold THEN escalate_structured_evasion",
+                        threshold: "Amounts match descending pattern or just-under-threshold",
+                        dataReq: "Historical transaction baselines, threshold data",
+                        mitigation: "Review customer business model for legitimate segmentation (e.g., multiple vendors); if none, escalate to SAR"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Identify primary deposit and all secondary wallets; chart full subdivision graph; verify amounts and timing; check if subdivision pattern is novel or matches customer history; calculate threshold values being avoided (reporting thresholds, exchange limits, etc.)",
+                    "ENRICHMENT: Research each secondary wallet for identity and prior use; cluster wallets to identify parent entity if linked; check if amounts correspond to specific reporting thresholds (e.g., $10k AML reporting trigger, exchange withdrawal limits); verify no legitimate business explanation",
+                    "ATTRIBUTION: Determine if customer has legitimate business need for subdivision (e.g., multi-vendor payments, store funding); if not documented, assess structuring intent; review customer risk profile for prior structuring red flags; check if amounts relate to known ransom/theft amounts in news",
+                    "DISPOSITION: If structuring pattern confirmed and no business rationale, file SAR for subdivision evasion; block further transfers pending review; may establish account monitoring for 90 days post-resolution"
+                ],
+                regulatory: [
+                    "31 CFR § 1010.330 – Structuring (Bank Secrecy Act violation; applies to all financial entities, including digital asset platforms)",
+                    "18 USC § 1956 (Money Laundering Offense) – Structuring as predicate act",
+                    "FinCEN Advisory (2011) – Structuring as AML red flag for all financial services",
+                    "OCC Bulletin 2023-18 – Structuring detection for digital asset transfers"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer receives 10 BTC deposit; within 2 hours transfers to 6 wallets in amounts 1.6, 1.5, 1.4, 1.3, 1.2, 1.0 BTC. All secondary wallets brand new. No business purpose documented. SAR filed for structured peel chain."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "E-commerce merchant receives $50k deposit; subdivides into payments to 10 suppliers ($3–5k each). Documented in business accounting; proportional to actual vendor payments. Risk scored lower; standard business operation."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Cryptocurrency investment fund subdivides deposits to fund 8 sub-portfolios (equal amounts). Legitimate business structure, but pattern matches peel chain numerically. Requires verification of fund structure; if legitimate, no escalation."
+                    }
+                ],
+                related: [6, 8, 18]
+            },
+            {
+                id: 8,
+                number: "08",
+                category: "Money Laundering",
+                title: "Privacy Coin Conversion (XMR/ZEC)",
+                severity: "high",
+                description: "Customer converts transparent-blockchain assets (Bitcoin, Ethereum) to privacy coins (Monero, Zcash) to obfuscate transaction graph. Privacy coins have built-in untraceability features; conversion is classic money-laundering obfuscation technique.",
+                indicators: [
+                    "Customer with no prior privacy coin trading history suddenly converts large amount to XMR or ZEC (on-chain behavior deviation)",
+                    "Conversion occurs immediately after suspicious activity or deposit from known-risky source (on-chain timing correlation)",
+                    "Conversion amount is high relative to customer's typical transaction size or account balance (on-chain anomaly)",
+                    "Customer uses DEX or atomic swap to convert (avoiding regulated exchange, which would block privacy coin deposits); non-custodial (on-chain transaction type)",
+                    "Subsequent XMR/ZEC transaction leaves exchange or platform (intent to hold untraceably)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF customer_converts_to_xmr_or_zec AND customer_baseline NOT in_privacy_asset_portfolio THEN flag_high_obfuscation_intent",
+                        threshold: "Single conversion by non-privacy-baseline customer",
+                        dataReq: "Customer transaction history, asset class baseline",
+                        mitigation: "Exclude customers with documented privacy coin trading activity (baseline); allow if conversion amount < $1k (experimentation); escalate if amount > $10k or pattern repeats"
+                    },
+                    {
+                        rule: "IF conversion_to_privacy_coin AND prior_suspicious_deposit_within_24h THEN escalate_post_suspicious_deposit_obfuscation",
+                        threshold: "Conversion within 24h of suspicious activity or risky deposit",
+                        dataReq: "Transaction sequence timeline, suspicious activity flags",
+                        mitigation: "Require manual review; may file SAR if pattern matches known money-laundering signature"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Identify source of funds converted to privacy coin (previous deposit, prior wallet); verify conversion route (DEX, atomic swap, exchange); confirm XMR/ZEC addresses are non-exchange (non-custodial); check if conversion is one-time or repeated pattern",
+                    "ENRICHMENT: Research customer's baseline asset preferences (is privacy coin consistent with profile?); check if conversion precedes risky deposit or suspicious activity (temporal pattern); query privacy coin address for further activity (if traceability allows); verify no documented business need (e.g., privacy coin research, mining)",
+                    "ATTRIBUTION: Assess customer's technical sophistication (privacy coin requires additional effort); determine if conversion indicates money-laundering intent or legitimate privacy preference; review customer risk profile for prior red flags; check for nexus to known-illicit privacy coin use (ransomware, darknet, etc.)",
+                    "DISPOSITION: If conversion by low-sophistication customer post-suspicious deposit, file SAR for obfuscation intent; if customer privacy coin profile baseline or amount < $1k, monitor without escalation; require EDD if borderline (attestation letter explaining privacy coin use)"
+                ],
+                regulatory: [
+                    "FinCEN Guidance on Privacy-Enhancing Cryptocurrencies (Feb 2021) – XMR, ZEC as high-risk AML assets",
+                    "FATF Rec. 19 (Cross-Border Transfers & Traceability) – Operators must maintain records; privacy coins exempt from traceability but trigger compliance obligations",
+                    "OCC Bulletin 2023-61 – Privacy Coin Use as Red Flag; recommended transaction monitoring and SAR filing"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer (no privacy coin history) receives $50k deposit from high-risk jurisdiction. Within 4 hours, converts entire amount to XMR via DEX (non-custodial). Sends to non-KYC wallet. SAR filed immediately for post-risky-deposit obfuscation."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Cryptocurrency researcher with documented XMR holdings converts modest amount ($500) to XMR for continued research. Baseline includes privacy coin; amount within historical range. No escalation; monitoring continues."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer claims privacy coin conversion for personal privacy (not money laundering). Legitimate use case exists (financial privacy advocates, persecuted journalists). Requires attestation; if plausible, monitor but don't escalate to SAR."
+                    }
+                ],
+                related: [6, 9, 10]
+            },
+            {
+                id: 9,
+                number: "09",
+                category: "Money Laundering",
+                title: "DeFi Protocol Layering (DEX, Lending, Yield Farming)",
+                severity: "medium",
+                description: "Illicit funds deposited into DeFi protocols and cycled through multiple DeFi operations (swap → lend → farm → stake → swap back) to create transaction opacity and obscure fund origin while generating legitimate-appearing on-chain activity.",
+                indicators: [
+                    "Customer deposits funds, immediately enters DeFi protocol interaction (swap → add liquidity → lend) without natural accumulation period (on-chain timing)",
+                    "Customer cycles through 4+ distinct DeFi interactions (Uniswap → Curve → Aave → Yearn → back to Uniswap) in rapid succession (on-chain protocol traversal)",
+                    "Transactions generate trading volume but minimal actual yield or profit (on-chain P&L analysis suggests activity is not economically rational)",
+                    "Customer has no prior DeFi activity; suddenly high-activity user with no gradual on-ramp (on-chain behavior deviation)",
+                    "Final asset or destination wallet differs from initial holding (on-chain asset transformation)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF defi_interaction_count >= 4 AND time_window < 24_hours AND customer_baseline NOT in_defi_user THEN flag_medium_layering_activity",
+                        threshold: "4+ DeFi interactions in 24 hours by non-DeFi-baseline customer",
+                        dataReq: "DeFi protocol transaction log, customer baseline classification",
+                        mitigation: "Whitelist known DeFi developers and power users; exclude legitimate yield-chasing strategies; require EDD for medium-risk accounts"
+                    },
+                    {
+                        rule: "IF defi_cycle_profit < min_economic_return AND defi_gas_fees > profit_generated THEN escalate_non_economic_layering",
+                        threshold: "Activity generates net loss or minimal profit (economic irrationality)",
+                        dataReq: "DeFi yield rates, gas fee data, transaction profit calculation",
+                        mitigation: "Exclude legitimate experimentation or small-amount testing; require manual review if amount > $50k"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Reconstruct full DeFi transaction sequence from deposit to final state; calculate net P&L including gas fees; verify customer identity and baseline; check if activity pattern is novel; cross-check DeFi protocols used (legitimate, well-audited, or suspicious)",
+                    "ENRICHMENT: Research customer's DeFi history (prior wallet activity on other platforms if traceable); verify no legitimate DeFi sophistication profile; check if DeFi activity correlates with known money-laundering funds (timing, amounts); query for customer attestations (e.g., 'learning DeFi')",
+                    "ATTRIBUTION: Assess economic rationality of DeFi cycle (does it generate expected yield?); determine if customer has legitimate reason for multi-protocol activity (e.g., yield arbitrage developer); review for nexus to known illicit funds; check if activity matches known obfuscation signature",
+                    "DISPOSITION: If activity is non-economic and customer lacks DeFi baseline, file SAR for layering; if economic returns justified and customer demonstrates sophistication, monitor without escalation; escalate to enhanced monitoring if pattern repeats with new deposits"
+                ],
+                regulatory: [
+                    "FinCEN Guidance on Virtual Assets (2019) – DeFi protocol interactions subject to AML requirements if platform qualifies as 'exchange' or 'custody'",
+                    "FATF Rec. 16 & 19 (Targeted Financial Sanctions & Cross-Border Transfers) – DeFi transactions must be monitored; recordkeeping required",
+                    "OCC Bulletin 2021-21 – DeFi Risks to Financial Institutions; AML monitoring requirements"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "New customer deposits $100k. Within 12 hours: swaps on Uniswap (cost $500 gas) → adds to Curve (cost $300 gas) → lends to Aave (cost $200 gas) → stakes in Yearn (cost $150 gas) → swaps back to stablecoin. Net loss: $1,150 in gas. No prior DeFi activity. SAR filed for non-economic layering."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "DeFi power user (with documented multi-chain history) executes yield-farming strategy across 5 protocols. Activity is economically rational; expected returns calculated. Baseline includes DeFi sophistication. No escalation; routine monitoring."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer new to DeFi, learning by experimentation. Small amounts ($500–1k per protocol), multiple interactions. Activity not economically rational, but customer KYC shows legitimate business need (fintech researcher). Requires documentation; if provided, no escalation."
+                    }
+                ],
+                related: [6, 8, 10]
+            },
+            {
+                id: 10,
+                number: "10",
+                category: "Money Laundering",
+                title: "NFT Wash Trading for Value Transfer",
+                severity: "medium",
+                description: "Illicit funds converted to NFTs via wash trading (buying and selling same NFT between controlled wallets at inflated prices) to create artificial value and transfer funds while appearing as legitimate digital art market activity.",
+                indicators: [
+                    "Customer purchases NFT at moderate price; immediately resells identical/similar NFT at 5–10x markup (on-chain price inflation)",
+                    "Buyer and seller are customer-linked wallets (on-chain clustering analysis)",
+                    "NFT collection is low-volume or low-reputation (on-chain rarity and volume analysis)",
+                    "Selling wallet withdraws proceeds to custodial exchange or non-custodial OTC desk within 48 hours (on-chain exit pattern)",
+                    "Multiple instances of same behavior with different NFTs over weeks (pattern of repeated wash trading)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF nft_purchase_price < nft_resale_price AND resale_multiplier > 3x AND time_to_resale < 24_hours AND buyer_seller_clustered THEN flag_medium_wash_trading",
+                        threshold: "3x+ price increase, resale within 24h, linked wallets",
+                        dataReq: "NFT marketplace transaction log, wallet clustering, price history",
+                        mitigation: "Exclude legitimate rare/valuable NFTs (high-reputation collections); require manual review if multiplier < 2x (could be legitimate market appreciation)"
+                    },
+                    {
+                        rule: "IF wash_trade_pattern_repeats_> 2x AND cumulative_value_laundered > threshold THEN escalate_structured_nft_value_transfer",
+                        threshold: "2+ wash trades with similar pattern, cumulative >$50k",
+                        dataReq: "Repeated transaction sequence, cumulative value calculation",
+                        mitigation: "Document NFT valuations for legitimate trades; escalate if pattern persists"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Identify all NFT purchases and sales by customer; calculate price changes and time intervals; verify buyer and seller wallet ownership (on-chain clustering); confirm transactions occurred on legitimate NFT marketplace (OpenSea, Blur, LooksRare, etc.)",
+                    "ENRICHMENT: Research NFT collection metadata (creator, community, trading volume, market cap) to assess legitimacy; check if NFT prices align with market baselines (NFT floor price databases); verify if customer has documented interest in digital art; check if resale destination (exchange/OTC) is custodial",
+                    "ATTRIBUTION: Determine if customer has legitimate NFT collection interest (profile, social media, prior art market participation); assess if price markup is defensible (rarity, scarcity, artist demand); review for nexus to illicit NFT marketplace (e.g., Blur, known for privacy-prioritizing trading)",
+                    "DISPOSITION: If wash trading pattern confirmed with low-value NFTs and customer lacks legitimate art interest, file SAR for value-transfer obfuscation; if legitimate NFT collection and defensible prices, monitor without escalation; block further NFT purchases from illicit-source funds pending review"
+                ],
+                regulatory: [
+                    "FinCEN Guidance on Digital Assets (2023) – NFT transactions subject to AML requirements if involving financial value transfer",
+                    "FATF Rec. 16 (Non-fungible Tokens & Value Transfer) – NFT sales treated as potential value-transfer mechanisms; recordkeeping required",
+                    "SEC Statements on Digital Assets (2023) – NFT markets subject to securities regulation if NFTs constitute investment contracts"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer purchases Pudgy Penguin NFT (#5432) for 2 ETH ($4k) on OpenSea. Within 6 hours, sells identical NFT to linked wallet for 20 ETH ($40k). Sells wallet immediately withdraws $35k to Kraken account under different KYC. SAR filed for NFT wash trading value transfer."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Legitimate collector purchases rare Bored Ape Yacht Club (#1234) for 50 ETH; market conditions improve. Sells 3 months later for 120 ETH (legitimate market appreciation). Customer KYC verified; documented collector. No escalation; market-driven transaction."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer experiments with NFT marketplace (small purchases/sales at varying prices). Amounts under $5k; no clear wash-trade pattern; no immediate exit to exchange. Requires documentation of intent; if educational or speculative (not value transfer), no escalation."
+                    }
+                ],
+                related: [6, 10]
+            },
+            {
+                id: 11,
+                number: "11",
+                category: "Money Laundering",
+                title: "P2P / OTC Desk Laundering",
+                severity: "high",
+                description: "Customer conducts high-frequency peer-to-peer cryptocurrency trades with multiple unverified counterparties outside regulated exchanges. OTC desk interactions lack AML controls and enable rapid fiat-to-crypto conversion without KYC, facilitating illicit fund laundering.",
+                indicators: [
+                    "Customer transfers crypto assets to multiple unverified wallet addresses (no recorded counterparty KYC or exchange verification) (on-chain + off-chain verification gap)",
+                    "Multiple transfers to same OTC desk wallet address over weeks (repeated P2P trading pattern) (on-chain transaction cluster)",
+                    "Transfers correspond to OTC desk published rates (customer appears to be transacting with known unregulated entity) (on-chain + off-chain correlation)",
+                    "Fiat deposits to customer account have no clear business explanation; funds immediately exit to OTC counterparties (on-chain + off-chain timing correlation)",
+                    "Customer avoids using regulated exchanges for transactions (preference for unverified counterparties)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF transfer_to_unverified_wallet_count >= 5 AND otc_desk_suspected AND customer_kyc_missing_for_counterparties THEN flag_high_p2p_aml_evasion",
+                        threshold: "5+ transfers to unverified addresses",
+                        dataReq: "Wallet cluster analysis, known OTC desk address registry",
+                        mitigation: "Exclude peer-to-peer transactions with documented counterparties (friends/family); require EDD if counterparty is unknown"
+                    },
+                    {
+                        rule: "IF transfer_to_otc_desk_frequency > 1_per_week AND cumulative_volume > threshold THEN escalate_structured_p2p_activity",
+                        threshold: "Weekly P2P trading >$50k/week",
+                        dataReq: "OTC desk transaction registry, frequency analysis",
+                        mitigation: "Allow legitimate crypto traders to use OTC desks; escalate only if pattern indicates evasion (rapid in/out, no arbitrage profit)"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Map all customer transactions to unverified peer addresses; identify clusters (repeated counterparties); cross-reference with known OTC desk wallet lists (maintained by blockchain analytics firms); verify if counterparties have associated business entities or regulatory registrations",
+                    "ENRICHMENT: Research each counterparty wallet for business information (website, regulatory filings, reputation on forums/Telegram); check if OTC desk has known compliance history (enforcement actions, sanctions violations); verify if customer documentation includes counterparty attestations (source of funds, use case); correlate with customer's business model (trader, business operator, etc.)",
+                    "ATTRIBUTION: Determine if customer has legitimate business reason for P2P trading (crypto trader, business operations in unbanked region); assess if P2P avoidance pattern matches evasion behavior (preference for unregulated counterparties over regulated exchanges); review customer risk profile for prior P2P red flags",
+                    "DISPOSITION: If customer is documented P2P trader with business rationale, require enhanced monitoring; if pattern indicates evasion (rapid cycles, no profit, avoidance of KYC), file SAR; block transactions to known illicit OTC desks (sanctions-evasion facilitators)"
+                ],
+                regulatory: [
+                    "FinCEN Guidance on Virtual Assets (2019) – P2P transactions NOT exempt from AML requirements; recordkeeping obligations apply to both parties",
+                    "FATF Rec. 16 & 19 (Targeted Financial Sanctions & Cross-Border Transfers) – Secondary sanctions liability for peer-to-peer facilitation of sanctions evasion",
+                    "OCC Bulletin 2021-21 – P2P Transaction Monitoring as part of cryptocurrency risk management"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer deposits $10k fiat weekly for 8 weeks; immediately transfers to Telegram OTC desk wallet (0xOTC999...). No documentation of counterparty; cumulative $80k transferred. SAR filed for structured P2P evasion."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Cryptocurrency trader with documented P2P business model; operates OTC desk and transacts with verified counterparties (KYC records maintained). High volume ($100k/week) but legitimate trading activity. No escalation; routine monitoring."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer in emerging market uses P2P exchanges (LocalBitcoins, Paxful) due to lack of banking access. Regular transfers to known P2P platform wallets; business rationale documented. Escalation depends on counterparty verification; if platform enforces KYC, lower risk."
+                    }
+                ],
+                related: [6, 12]
+            },
+            {
+                id: 12,
+                number: "12",
+                category: "Fraud & Scams",
+                title: "Romance / Pig Butchering Scam Flows",
+                severity: "high",
+                description: "Victim deceived into cryptocurrency investment via fake romantic relationship or business opportunity ('pig butchering'). Victim deposits funds to scammer's wallet; scammer converts to privacy coin or exits to cash.",
+                indicators: [
+                    "Customer reports cryptocurrency loss via social engineering (dating app, fake business opportunity) (off-chain victim report)",
+                    "Victim's deposits trace to specific scammer wallet cluster (on-chain transaction graph to scam wallet)",
+                    "Scam wallet exhibits characteristics: rapid conversion to privacy coin (XMR/ZEC), multiple quick exits to unverified OTC desks, high-velocity transactions (on-chain scammer behavior)",
+                    "Victim never receives promised returns; communication ceases after deposit (off-chain interaction history, messaging platforms)",
+                    "Scammer wallet receives deposits from multiple victims (clustering analysis shows 5+ victim wallets in 30-day period)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF customer_reports_scam_loss AND loss_amount_traceable_to_wallet AND wallet_shows_scam_characteristics THEN flag_high_confirmed_scam_loss",
+                        threshold: "Customer report + on-chain confirmation",
+                        dataReq: "Customer complaint database, wallet clustering",
+                        mitigation: "Require victim to file police report (supports SAR); coordinate with law enforcement on wallet freeze"
+                    },
+                    {
+                        rule: "IF wallet_receives_deposits_from_multiple_unrelated_sources AND wallet_converts_to_privacy_coin_immediately THEN escalate_likely_scam_operation",
+                        threshold: "5+ deposits from different customers in 30 days, rapid privacy coin conversion",
+                        dataReq: "Wallet cluster analysis, victim correlation",
+                        mitigation: "Flag wallet as scam operation; block deposits to scam wallet; initiate law enforcement notification"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Intake victim's detailed account of scam (dates, communication, amounts); cross-verify victim's wallet address with blockchain; trace deposits to scammer wallet; verify customer's fund source (legitimate income source or prior victim restitution)",
+                    "ENRICHMENT: Investigate scammer wallet history (cluster related wallets, withdrawal destinations); identify other victims (correlation analysis on customer base); contact law enforcement (FBI IC3, local authorities) to coordinate investigation; query dark web forums for scammer group identification",
+                    "ATTRIBUTION: Assess if scammer operation is organized criminal group (multiple victim coordinations, sophisticated evasion) or individual bad actor; check for nexus to known ransomware or fraud networks; identify scammer's final cash-out location (geography, exchange, OTC desk)",
+                    "DISPOSITION: File SAR for confirmed scam loss (customer as victim, not perpetrator); block scammer wallet from receiving further deposits; freeze scammer's assets if funds still held on platform; coordinate with law enforcement for potential recovery and criminal prosecution; issue customer restitution if applicable (per platform policy)"
+                ],
+                regulatory: [
+                    "FinCEN Alert (Jan 2023) – Romance Scam Crypto Losses; reporting and victim protection",
+                    "FBI Alert IC3 (2023) – Pig Butchering Scams targeting cryptocurrency investors; criminal referral process",
+                    "FATF Rec. 8 & 10 (Non-Profit Organizations & Customer Due Diligence) – Fraud victim protections; restitution recordkeeping"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer met 'Amy Li' on dating app (fake identity); 'Amy' convinced customer to invest in crypto project. Customer deposited $50k USDC to provided address. No returns, communication ceased. Customer files complaint. Tracing shows 0x9999...9999 is scam wallet; received $500k from 12 different victims in 30 days. SAR filed; wallet flagged as scam operation."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Customer conducts legitimate OTC trade with peer (known counterparty); transaction flagged as potential scam due to one-time counterparty. Verification confirms legitimate peer-to-peer transaction; no victims. Alert tuned out; no escalation."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer reports scam loss, but actually lost funds due to own error (typo in recipient address, not scamming). On-chain tracing shows recipient is legitimate wallet (no scam characteristics). Investigation required; if legitimate recipient (e.g., exchange), no SAR; customer advised of irreversibility."
+                    }
+                ],
+                related: [13, 14]
+            },
+            {
+                id: 13,
+                number: "13",
+                category: "Fraud & Scams",
+                title: "Rug Pull / Exit Scam Patterns",
+                severity: "high",
+                description: "Fraudulent smart contract or DeFi protocol operator promises investment returns or utility, collects funds from victims, then abruptly withdraws all assets ('rugs') and ceases operations, leaving victims with worthless tokens.",
+                indicators: [
+                    "New smart contract deployed (age < 30 days) with high investor buy-in (on-chain contract age + liquidity)",
+                    "Creator wallet receives large percentage of tokens or liquidity provider (LP) withdrawals (on-chain token distribution)",
+                    "Marketing campaign promises unrealistic returns (e.g., '10x in 30 days') with urgency language (off-chain marketing materials, social media analysis)",
+                    "Contract code lacks security audit or contains suspicious functions (e.g., centralized withdrawal, pausable transfers) (smart contract code analysis)",
+                    "Rapid exit: creator withdraws all liquidity and transfers tokens to untraced wallet within 48–72 hours of launch (on-chain token flow)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF contract_age < 30_days AND creator_holds_majority_tokens AND withdrawal_activity_spike THEN flag_high_rug_pull_risk",
+                        threshold: "New contract + majority creator holdings + liquidity drain",
+                        dataReq: "Contract deployment data, token holder distribution, liquidity pool data",
+                        mitigation: "Exclude legitimate new DeFi projects (verified teams, audit reports, community trust); require contract code review for high-risk projects"
+                    },
+                    {
+                        rule: "IF creator_withdraws_all_liquidity AND investors_left_with_illiquid_tokens THEN flag_confirmed_rug_pull_scam",
+                        threshold: "Total liquidity withdrawal by creator",
+                        dataReq: "Liquidity pool events, token holder data",
+                        mitigation: "Immediate notification to platform; freeze creator wallet; initiate law enforcement referral; process SAR for investor victims"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Verify suspicious contract deployment (check Etherscan for contract creation, creator wallet, token distribution); confirm investor reports of loss; calculate total investor losses; verify contract has been 'rugged' (liquidity withdrawn, creator wallet activity ceased)",
+                    "ENRICHMENT: Analyze creator wallet history (prior projects, funding sources); reverse-engineer project marketing (Discord, Twitter, telegram channels) to identify scammer group; check if creator identity is anonymous (high-risk) or verified (credibility); cross-reference contract code with known rug-pull patterns (centralized functions, no audit)",
+                    "ATTRIBUTION: Determine if scam is one-off or part of organized rug-pull ring (same creator group, similar contract patterns); assess total victim loss; identify if creator is known bad actor (blockchain analysis databases); check for nexus to other fraud networks (ransomware, social engineering, etc.)",
+                    "DISPOSITION: File SAR for each investor victim (scam loss); block creator wallet from deposits; freeze any remaining assets; coordinate with law enforcement (FBI, SEC); issue public warning to user base if known rug-pull operation; consider victim restitution if assets recoverable"
+                ],
+                regulatory: [
+                    "SEC Statement (Jan 2023) – Rug Pulls and Securities Fraud; DeFi tokens as potential securities",
+                    "FinCEN Guidance (2023) – Rug Pull Scams as predicate to money laundering; SAR filing requirements",
+                    "FATF Rec. 8 & 10 (Fraud & Scam Reporting) – Operator obligations to report confirmed scam losses"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "New token 'MegaCoin' launches; promises 1000x returns. 500 investors deposit $5M over 48 hours. Creator wallet holds 90% of tokens. On day 2, creator withdraws all $4.5M liquidity and transfers tokens to 0x0000...0000. Investors left with illiquid tokens. SAR filed; law enforcement notified."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Legitimate DeFi protocol (e.g., Uniswap clone) launches with team that holds governance tokens; tokens distributed to community. High percentage creator holdings is normal for governance; liquidity is permanently locked (no withdrawal function). No rug risk; monitoring continues."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Protocol developer withdraws liquidity to rebalance or migrate to new platform (not a scam). Requires verification of developer intent (documentation, community communication); if legitimate migration, lower risk; if abandonment without communication, escalate to scam flag."
+                    }
+                ],
+                related: [13, 14]
+            },
+            {
+                id: 14,
+                number: "14",
+                category: "Fraud & Scams",
+                title: "Address Poisoning Attacks",
+                severity: "medium",
+                description: "Attacker creates lookalike wallet address similar to popular contract or exchange address, then sends unsolicited token transfers to customers. Victims may mistake poisoned address for legitimate, causing fund loss if they send tokens to poisoned address.",
+                indicators: [
+                    "Customer reports sending funds to address that looked legitimate but was actually attacker's lookalike (off-chain customer complaint + on-chain verification)",
+                    "Customer's transaction went to address similar to (but different from) intended target (on-chain address similarity analysis)",
+                    "Attacker's address received multiple small transfers from different victims, all appearing accidental (on-chain transaction pattern to poisoned address)",
+                    "Attacker sends unsolicited token transfers to customer wallets as 'spam' (breadcrumbing) to pollute address history (on-chain transfer analysis of incoming dust transfers)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF customer_reports_address_confusion AND victim_sent_to_wrong_address AND address_similarity_high THEN flag_medium_address_poisoning_loss",
+                        threshold: "Customer complaint + address similarity verification",
+                        dataReq: "Customer complaint database, Levenshtein distance between addresses",
+                        mitigation: "Verify customer's intended recipient; if legitimate mistake, no SAR required (customer error, not fraud by customer); document poisoned address for blacklist"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Intake customer's complaint (intended recipient, actual recipient address, amount, timestamp); verify both addresses on blockchain; calculate address similarity (Levenshtein distance, character-position matching); confirm customer's error (not malicious sending)",
+                    "ENRICHMENT: Analyze poisoned address history (who created it, how old, what prior transactions); check for pattern (does poisoned address receive multiple small transfers from different victims?); verify if poisoned address is active scammer infrastructure; check if attacker is known bad actor",
+                    "ATTRIBUTION: Assess if address poisoning is sophisticated scam (multi-victim coordination, careful address mimicry) or opportunistic (lucky similarity); identify attacker's cash-out destination (OTC desk, exchange, etc.); check for nexus to larger scam network",
+                    "DISPOSITION: Address poisoning is customer error (not AML violation); no SAR required for victim. If poisoned address is confirmed scammer wallet, file SAR for scam operation; add poisoned address to customer blacklist; issue customer advisory on address verification best practices"
+                ],
+                regulatory: [
+                    "No specific AML regulatory requirement (address poisoning is civil/criminal fraud, not AML violation); however, customer protection guidance applies",
+                    "FTC Scam Alert (2023) – Address poisoning as emerging fraud vector; consumer education recommended",
+                    "FATF Rec. 8 & 10 (Fraud Reporting) – Scam operation detection and law enforcement notification"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer intended to send to OpenSea address 0x3Cc6CddA60b887dFCb90645Ff45ad159991D86eE, but sent to attacker's poisoned 0x3Cc6CddA60b887dFCb90645Ff45ad159991D86ff (swapped 'e' for 'f'). Lost $20k. Poisoned address received 0.5 ETH from 8 different victims. Scammer wallet flagged; attacker identification attempted."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Customer intentionally sent funds to new address (not typo); verifies recipient address before sending. No confusion; legitimate transaction. No escalation; routine transaction."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer claims address poisoning, but actually sent to legitimate address controlled by new counterparty (not attacker). Verification required; if counterparty confirms receipt and transaction is legitimate, no scam; customer educated on address verification importance."
+                    }
+                ],
+                related: [12, 15]
+            },
+            {
+                id: 15,
+                number: "15",
+                category: "Fraud & Scams",
+                title: "Approval Phishing / Drainer Contracts",
+                severity: "critical",
+                description: "Malicious smart contract or app tricks customer into signing blockchain transaction that approves token transfer to attacker's address. Once approved, attacker can drain customer's wallet of specified tokens without further authorization.",
+                indicators: [
+                    "Customer clicks to 'approve' transaction via Web3 wallet (MetaMask, WalletConnect, etc.) for what appears to be legitimate dApp (off-chain user action)",
+                    "Attacker's contract address appears in transaction details, but customer may not notice (on-chain contract address verification)",
+                    "Customer's wallet tokens disappear immediately after approval (on-chain token transfer event to attacker wallet)",
+                    "Customer did not consciously authorize transfer; tokens vanished after signing unrelated 'approval' or 'claim' transaction (off-chain customer report + on-chain event log)",
+                    "Multiple victims report same malicious contract address (clustering of victim complaints)"
+                ],
+                detectionRules: [
+                    {
+                        rule: "IF customer_reports_unauthorized_approval THEN flag_critical_drainer_contract_victim",
+                        threshold: "Single customer report of unauthorized token transfer post-approval",
+                        dataReq: "Customer transaction history, approval event logs",
+                        mitigation: "Verify customer authorization (did customer sign transaction?); if customer authorized unknowingly (phishing), treat as victim; no SAR required"
+                    },
+                    {
+                        rule: "IF approval_event_followed_by_drainage_event_within_24h AND multiple_victims_same_contract THEN flag_confirmed_drainer_operation",
+                        threshold: "5+ victims of same contract address in 30 days",
+                        dataReq: "Contract event logs, victim complaint database",
+                        mitigation: "Blacklist drainer contract immediately; issue customer warnings; coordinate with security community (front ends, wallet providers) on contract blacklist"
+                    }
+                ],
+                playbook: [
+                    "INITIAL TRIAGE: Intake victim's complaint (transaction hash, amount lost, where they clicked); verify transaction hash on blockchain; identify malicious contract address; cross-check contract for known phishing signatures (scam database, security firm reports)",
+                    "ENRICHMENT: Analyze drainer contract code (if public) for malicious functions; identify contract creator; query for victim coordination (complaints, Reddit, X/Twitter); check if attacker has drained other wallets via same contract; identify attacker's cash-out address (exchange, OTC desk)",
+                    "ATTRIBUTION: Assess if drainer is one-time phishing site or sophisticated ongoing operation (multiple victims, high coordination); check if attacker is known bad actor; identify infection vector (fake Discord, phishing site, compromised website, etc.)",
+                    "DISPOSITION: File SAR for each victim (fraud/theft loss); block drainer contract address from platform; issue immediate customer alert; coordinate with security community (MetaMask, WalletConnect, etherscan) to blacklist contract; attempt to trace attacker's cash-out wallet for law enforcement"
+                ],
+                regulatory: [
+                    "No specific AML regulation; however, customer protection and theft reporting apply",
+                    "FTC Scam Alert (2023) – Token Drainer Attacks; consumer protection guidance",
+                    "FATF Rec. 8 & 10 (Fraud & Scam Reporting) – Operator obligation to identify and report fraud operations"
+                ],
+                scenarios: [
+                    {
+                        label: "TRUE POSITIVE",
+                        text: "Customer receives Discord DM (fake OpenSea) with link to 'verify wallet ownership'. Clicks; MetaMask popup for 'approval' (attacker contract hidden in details). Customer signs. Attacker immediately drains $100k USDC. 47 other victims report same contract. SAR filed; contract blacklisted; law enforcement notified."
+                    },
+                    {
+                        label: "FALSE POSITIVE",
+                        text: "Customer legitimately approves token spend for DEX transaction (Uniswap); deliberately authorizes transfer to Uniswap router. Attacker not involved; customer willingly approved transaction. No phishing or unauthorized access. No escalation."
+                    },
+                    {
+                        label: "EDGE CASE",
+                        text: "Customer claims drainer attack, but upon inspection, customer approved legitimate contract (e.g., Aave lending pool) and then withdrew funds (legitimate transaction). Customer confuses approval with theft. Investigation required; if no unauthorized access, no SAR; customer educated on approval mechanics."
+                    }
+                ],
+                related: [12, 14]
+            }
+        ];
+
+        // Initialize
+        function initApp() {
+            renderCategories();
+            setupEventListeners();
+            displayDefaultView();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            const categories = {};
+
+            // Group typologies by category
+            typologies.forEach(typ => {
+                if (!categories[typ.category]) {
+                    categories[typ.category] = [];
+                }
+                categories[typ.category].push(typ);
+            });
+
+            // Render each category
+            Object.keys(categories).forEach(cat => {
+                const section = document.createElement('div');
+                section.className = 'category-section';
+
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `
+                    <span>${cat}</span>
+                    <span class="category-count">${categories[cat].length}</span>
+                `;
+                section.appendChild(header);
+
+                const list = document.createElement('ul');
+                list.className = 'typology-list';
+
+                categories[cat].forEach(typ => {
+                    const item = document.createElement('li');
+                    item.className = 'typology-item';
+                    const link = document.createElement('div');
+                    link.className = 'typology-link';
+                    link.textContent = `${typ.number} ${typ.title}`;
+                    link.onclick = () => displayTypology(typ.id);
+                    item.appendChild(link);
+                    list.appendChild(item);
+                });
+
+                section.appendChild(list);
+                container.appendChild(section);
+            });
+        }
+
+        function displayTypology(id) {
+            const typology = typologies.find(t => t.id === id);
+            if (!typology) return;
+
+            // Update active state
+            document.querySelectorAll('.typology-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.closest('.typology-link').classList.add('active');
+
+            const content = document.getElementById('contentArea');
+            content.innerHTML = `
+                <div class="typology-detail active">
+                    <div class="typology-card">
+                        <div class="typology-header">
+                            <div class="typology-number">${typology.number}</div>
+                            <div class="typology-title-section">
+                                <div class="typology-title">${typology.title}</div>
+                                <div class="typology-badges">
+                                    <div class="badge badge-${typology.severity}">${typology.severity.toUpperCase()}</div>
+                                    <div class="badge badge-category">${typology.category}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Description</div>
+                            <div class="section-content">
+                                <p class="description-text">${typology.description}</p>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Red Flag Indicators</div>
+                            <ul class="indicator-list">
+                                ${typology.indicators.map(ind => `<li>${ind}</li>`).join('')}
+                            </ul>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Detection Rules</div>
+                            ${typology.detectionRules.map((rule, i) => `
+                                <div style="margin-bottom: 16px;">
+                                    <div style="font-weight: 500; margin-bottom: 8px; color: var(--text-primary);">Rule ${i + 1}</div>
+                                    <div class="code-block">
+                                        ${rule.rule}
+                                        <button class="copy-btn" onclick="copyToClipboard('${rule.rule.replace(/'/g, "\\'")}')">Copy</button>
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-tertiary); margin-top: 6px;">
+                                        <div><strong>Threshold:</strong> ${rule.threshold}</div>
+                                        <div><strong>Data Required:</strong> ${rule.dataReq}</div>
+                                        <div><strong>False Positive Mitigation:</strong> ${rule.mitigation}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Investigation Playbook</div>
+                            <ol class="step-list">
+                                ${typology.playbook.map(step => `<li>${step}</li>`).join('')}
+                            </ol>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Regulatory Basis</div>
+                            <div class="section-content">
+                                ${typology.regulatory.map(cite => `
+                                    <div class="citation">${cite}</div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Testing Scenarios</div>
+                            ${typology.scenarios.map(scen => `
+                                <div class="scenario-box">
+                                    <div class="scenario-label">${scen.label}</div>
+                                    <div>${scen.text}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">Related Typologies</div>
+                            <div class="related-list">
+                                ${typology.related.map(relId => {
+                                    const rel = typologies.find(t => t.id === relId);
+                                    return `<div class="related-link" onclick="document.querySelector('[data-typology-id=\\\"${relId}\\\"]')?.click()">${rel.number} ${rel.title}</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Search
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', handleFilter);
+            });
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('themeIcon').textContent = next === 'dark' ? '🌙' : '☀️';
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            if (!query) {
+                displayDefaultView();
+                return;
+            }
+
+            const results = typologies.filter(typ =>
+                typ.title.toLowerCase().includes(query) ||
+                typ.description.toLowerCase().includes(query) ||
+                typ.category.toLowerCase().includes(query)
+            );
+
+            displaySearchResults(results);
+        }
+
+        function handleFilter(e) {
+            const severity = e.target.dataset.filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            e.target.classList.add('active');
+
+            const filtered = severity === 'all' ? typologies : typologies.filter(t => t.severity === severity);
+            displaySearchResults(filtered);
+        }
+
+        function displaySearchResults(results) {
+            const content = document.getElementById('contentArea');
+            if (results.length === 0) {
+                content.innerHTML = '<div class="no-results"><h3>No typologies found</h3><p>Try a different search or filter</p></div>';
+                return;
+            }
+
+            content.innerHTML = `
+                <div class="typology-detail active">
+                    ${results.map(typ => `
+                        <div class="typology-card">
+                            <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px;">
+                                <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; color: var(--accent-info); min-width: 40px;">${typ.number}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; cursor: pointer;" onclick="document.getElementById('searchInput').value=''; handleFilter({target: {dataset: {filter: 'all'}, classList: {remove: () => {}, add: () => {}}}});">${typ.title}</div>
+                                    <div class="typology-badges">
+                                        <div class="badge badge-${typ.severity}">${typ.severity.toUpperCase()}</div>
+                                        <div class="badge badge-category">${typ.category}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="description-text">${typ.description}</p>
+                            <button style="padding: 8px 14px; background-color: var(--accent-info); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;" onclick="displayTypology(${typ.id})">View Full Details</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function displayDefaultView() {
+            const content = document.getElementById('contentArea');
+            content.innerHTML = '<div class="no-results"><h3>Select a typology to begin</h3><p>Use the sidebar or search to find crypto AML typologies</p></div>';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard');
+            });
+        }
+
+        // Load theme from localStorage
+        const saved = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+        document.getElementById('themeIcon').textContent = saved === 'dark' ? '🌙' : '☀️';
+
+        initApp();
+    </script>
+</body>
+</html>

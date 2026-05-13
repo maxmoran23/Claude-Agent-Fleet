@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Asset Regulatory Intelligence Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141829;
+            --bg-tertiary: #1a1f3a;
+            --border-color: #2d3561;
+            --text-primary: #e8eaf6;
+            --text-secondary: #b0b9db;
+            --text-tertiary: #7c87b8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --status-enacted: #10b981;
+            --status-proposed: #f59e0b;
+            --status-pending: #f97316;
+            --status-blocked: #ef4444;
+            --status-monitoring: #3b82f6;
+        }
+
+        :root.light-mode {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #f1f5f9;
+            --bg-tertiary: #e2e8f0;
+            --border-color: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-tertiary: #64748b;
+            --accent-primary: #4f46e5;
+            --accent-secondary: #7c3aed;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-content h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-content p {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Controls Section */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+            background: var(--bg-secondary);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background-color: var(--bg-tertiary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            pointer-events: none;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            align-self: center;
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-enacted {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--status-enacted);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-proposed {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--status-proposed);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-pending {
+            background-color: rgba(249, 115, 22, 0.15);
+            color: var(--status-pending);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .badge-blocked {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--status-blocked);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-monitoring {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: var(--status-monitoring);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Card View */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .card-content {
+            margin-bottom: 16px;
+        }
+
+        .card-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .card-tag {
+            background: var(--bg-tertiary);
+            color: var(--text-tertiary);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-expand {
+            color: var(--accent-primary);
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Expanded Detail */
+        .card.expanded {
+            grid-column: 1 / -1;
+        }
+
+        .expanded-content {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .card.expanded .expanded-content {
+            display: block;
+        }
+
+        .detail-section {
+            margin-bottom: 16px;
+        }
+
+        .detail-section h4 {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .detail-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .detail-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .detail-list li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .detail-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 4px;
+            color: var(--accent-primary);
+        }
+
+        /* Timeline View */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .timeline-item {
+            margin-bottom: 32px;
+            padding-left: 120px;
+            position: relative;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: 23px;
+            top: 4px;
+            width: 34px;
+            height: 34px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .timeline-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .timeline-date {
+            font-size: 11px;
+            color: var(--accent-primary);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .timeline-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Agency Cards */
+        .agency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .agency-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s;
+        }
+
+        .agency-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+        }
+
+        .agency-header {
+            margin-bottom: 12px;
+        }
+
+        .agency-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .agency-lead {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .agency-stance {
+            display: inline-block;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .stance-proactive {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--status-enacted);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .stance-cautious {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--status-proposed);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .stance-restrictive {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--status-blocked);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .agency-items {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Impact Matrix */
+        .impact-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .impact-table thead {
+            background: var(--bg-tertiary);
+        }
+
+        .impact-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .impact-table td {
+            padding: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .impact-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .impact-high {
+            color: var(--status-blocked);
+            font-weight: 600;
+        }
+
+        .impact-medium {
+            color: var(--status-proposed);
+            font-weight: 600;
+        }
+
+        .impact-low {
+            color: var(--text-secondary);
+        }
+
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                flex-direction: column;
+            }
+
+            .timeline::before {
+                left: 15px;
+            }
+
+            .timeline-item {
+                padding-left: 80px;
+            }
+
+            .timeline-marker {
+                left: 0;
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+            }
+
+            .agency-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-table {
+                font-size: 11px;
+            }
+
+            .impact-table th, .impact-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <h1>Digital Asset Regulatory Intelligence</h1>
+                <p>TRACKER v1.0 | Crypto Regulatory Landscape 2022–2026</p>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle">Light Mode</button>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="card">Cards</button>
+                    <button class="view-btn" data-view="timeline">Timeline</button>
+                    <button class="view-btn" data-view="agencies">Agencies</button>
+                    <button class="view-btn" data-view="impact">Impact</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search legislation, agencies, keywords...">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Status</span>
+                <div class="filter-buttons" id="statusFilters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="enacted">Enacted</button>
+                    <button class="filter-btn" data-filter="proposed">Proposed</button>
+                    <button class="filter-btn" data-filter="pending">Pending</button>
+                    <button class="filter-btn" data-filter="blocked">Blocked</button>
+                    <button class="filter-btn" data-filter="monitoring">Monitoring</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Agency</span>
+                <div class="filter-buttons" id="agencyFilters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card View -->
+        <div class="tab-content active" id="cardView">
+            <div class="cards-grid" id="cardsContainer"></div>
+        </div>
+
+        <!-- Timeline View -->
+        <div class="tab-content" id="timelineView">
+            <div class="timeline" id="timelineContainer"></div>
+        </div>
+
+        <!-- Agencies View -->
+        <div class="tab-content" id="agenciesView">
+            <div class="agency-grid" id="agenciesContainer"></div>
+        </div>
+
+        <!-- Impact View -->
+        <div class="tab-content" id="impactView">
+            <div id="impactContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data: Regulatory Items
+        const regulatoryData = [
+            {
+                id: 'genius',
+                title: 'GENIUS Act',
+                fullName: 'Guiding and Establishing National Innovation for US Stablecoins Act',
+                status: 'proposed',
+                agency: 'Congress',
+                date: '2024-2026',
+                description: 'Comprehensive stablecoin regulatory framework establishing federal licensing regime, reserve requirements, and issuer prudential standards.',
+                keyProvisions: [
+                    'Federal stablecoin issuer licensing by OCC',
+                    'Full reserve backing requirement (100% or synthetic)',
+                    'Prohibition on fractional reserve stablecoins',
+                    'Consumer protection disclosures',
+                    'Redemption rights and liquidity requirements',
+                    'Interoperability with banking system',
+                    'State banking coordination'
+                ],
+                compliance: [
+                    'Banks must evaluate stablecoin partnerships under GENIUS framework',
+                    'Custody requirements align with OCC guidance',
+                    'Enhanced AML/CFT controls for stablecoin redemption',
+                    'Compliance timeline: conditional once enacted'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'MEDIUM',
+                    exchanges: 'HIGH',
+                    custodians: 'HIGH',
+                    defi: 'HIGH',
+                    stablecoins: 'HIGH'
+                },
+                tags: ['stablecoins', 'licensing', 'reserves', 'consumer-protection']
+            },
+            {
+                id: 'fit21',
+                title: 'FIT21',
+                fullName: 'Financial Innovation and Technology for the 21st Century Act',
+                status: 'proposed',
+                agency: 'Congress',
+                date: '2024-2026',
+                description: 'Market structure bill clarifying regulatory framework for digital assets, addressing SEC vs CFTC jurisdiction and introducing decentralization test.',
+                keyProvisions: [
+                    'Decentralization test: determines if asset is security vs commodity',
+                    'CFTC primary jurisdiction over commodities/derivatives',
+                    'SEC jurisdiction over digital asset securities',
+                    'Self-regulatory organization (SRO) framework for crypto exchanges',
+                    'Custody separation requirements',
+                    'Clearing/settlement standardization'
+                ],
+                compliance: [
+                    'Platforms must implement SRO-compliant operations',
+                    'Clear classification of digital assets pre-launch',
+                    'Enhanced custody segregation controls',
+                    'Exam readiness: decentralization documentation for all products'
+                ],
+                impact: {
+                    banks: 'MEDIUM',
+                    brokers: 'HIGH',
+                    exchanges: 'HIGH',
+                    custodians: 'HIGH',
+                    defi: 'HIGH',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['market-structure', 'jurisdiction', 'decentralization', 'sro']
+            },
+            {
+                id: 'sab121',
+                title: 'SAB 121 / SAB 122',
+                fullName: 'SEC Staff Accounting Bulletin 121 & 122 - Digital Asset Accounting',
+                status: 'enacted',
+                agency: 'SEC',
+                date: '2023-2025',
+                description: 'Staff guidance on accounting treatment for custodied crypto assets and digital asset holdings. Subject to ongoing modification and clarification.',
+                keyProvisions: [
+                    'Off-balance sheet accounting for custodied crypto (SAB 121)',
+                    'Fair value measurement requirements',
+                    'Impairment testing and disclosure standards',
+                    'Consolidation considerations for crypto investments',
+                    'SAB 122 modifications pending for 2025-2026'
+                ],
+                compliance: [
+                    'Finance teams must implement SAB 121/122 accounting controls',
+                    'Quarterly fair value assessments of crypto holdings',
+                    'Enhanced audit documentation for digital assets',
+                    'Monitor SEC updates: potential modifications in 2025'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'HIGH',
+                    exchanges: 'MEDIUM',
+                    custodians: 'HIGH',
+                    defi: 'MEDIUM',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['accounting', 'disclosure', 'custody', 'fair-value']
+            },
+            {
+                id: 'fincen-mixers',
+                title: 'FinCEN Mixer Rulemaking',
+                fullName: 'FinCEN Proposed Rule - Mixing Services as Primary Money Laundering Concern',
+                status: 'proposed',
+                agency: 'FinCEN',
+                date: '2023-2025',
+                description: 'Proposed rule designating mixing/tumbling services as primary money laundering concern, triggering enhanced AML obligations for VASPs.',
+                keyProvisions: [
+                    'Designation of mixers as PMLC (primary money laundering concern)',
+                    'Transaction monitoring for mixer-derived funds',
+                    'Enhanced due diligence for customers using/receiving from mixers',
+                    'Reporting thresholds for mixer transactions',
+                    'De-risking guidance for VASP exposure'
+                ],
+                compliance: [
+                    'Implement KYT (Know Your Transaction) rules for mixer detection',
+                    'SAR filing procedures for mixer-linked transactions',
+                    'Customer education on mixer risks',
+                    'EDD procedures for mixer customers',
+                    'Vendor KYT tools must detect mixer signatures'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'MEDIUM',
+                    exchanges: 'HIGH',
+                    custodians: 'HIGH',
+                    defi: 'HIGH',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['aml', 'mixers', 'pmlc', 'transaction-monitoring']
+            },
+            {
+                id: 'travel-rule',
+                title: 'Travel Rule Implementation',
+                fullName: 'FinCEN Travel Rule - CVC & LTDA Framework',
+                status: 'monitoring',
+                agency: 'FinCEN',
+                date: '2023-2026',
+                description: 'Implementation of Travel Rule for crypto VASPs; phased rollout via Crypto VC (CVC) and LTDA protocols with ongoing guidance updates.',
+                keyProvisions: [
+                    'Originator/beneficiary information transmission (FATF standard)',
+                    'Crypto VC (OADR) protocol adoption for information exchange',
+                    'LTDA (Lightning Testbed Data Architecture) for layer-2 assets',
+                    'Exemptions: transfers under threshold or to hosted wallets',
+                    'De minimis exceptions (under $3,000 for now)'
+                ],
+                compliance: [
+                    'Integrate Travel Rule compliance into transaction processing',
+                    'Vendor partnerships for CVC/LTDA protocol support',
+                    'Customer identity verification at origination point',
+                    'Recipient institution on-boarding procedures',
+                    'Quarterly compliance testing and monitoring'
+                ],
+                impact: {
+                    banks: 'MEDIUM',
+                    brokers: 'MEDIUM',
+                    exchanges: 'HIGH',
+                    custodians: 'HIGH',
+                    defi: 'MEDIUM',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['aml', 'travel-rule', 'kyp', 'vasp']
+            },
+            {
+                id: 'tornado-cash',
+                title: 'OFAC Tornado Cash Designation',
+                fullName: 'Tornado Cash SDN Designation & Legal Challenges',
+                status: 'enacted',
+                agency: 'OFAC',
+                date: '2022-2025',
+                description: 'OFAC designation of Tornado Cash as SDN; ongoing litigation regarding Constitutional due process and software sanctioning.',
+                keyProvisions: [
+                    'Tornado Cash smart contract addresses listed as SDN',
+                    'Prohibition on US entity interaction with contract',
+                    'Developer prosecutions underway (2023-2025)',
+                    'Legal challenges: First Amendment, Due Process defenses',
+                    'Precedent: software/code sanctioning authority clarification'
+                ],
+                compliance: [
+                    'Tornado Cash address monitoring in transaction screening',
+                    'Automated blocking for Tornado-linked transactions',
+                    'EDD for customers with history of Tornado use',
+                    'Understand case law: implications for future software sanctions',
+                    'Monitor OFAC updates on crypto sanctions list'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'HIGH',
+                    exchanges: 'HIGH',
+                    custodians: 'HIGH',
+                    defi: 'HIGH',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['ofac', 'sanctions', 'sdn', 'litigation']
+            },
+            {
+                id: 'doj-framework',
+                title: 'DOJ Crypto Enforcement Framework',
+                fullName: 'Department of Justice Crypto & Digital Assets Enforcement Updates',
+                status: 'enacted',
+                agency: 'DOJ',
+                date: '2023-2026',
+                description: 'DOJ guidance and priorities for crypto prosecutions, enforcement actions, and asset recovery; includes developer liability standards.',
+                keyProvisions: [
+                    'Developer liability: responsible conduct vs negligent/knowing',
+                    'Asset freezing and recovery priorities',
+                    'Ransomware and sanctions evasion focus',
+                    'Stablecoin fraud and misrepresentation prosecutions',
+                    'International coordination (FATF, foreign regulators)'
+                ],
+                compliance: [
+                    'Understand DOJ prosecutor priorities for risk assessment',
+                    'SAR filings aligned with DOJ enforcement focus',
+                    'Anti-ransomware controls in travel rule procedures',
+                    'Stablecoin risk framework accounting for fraud prosecution risk',
+                    'Monitor DOJ press releases for emerging threat indicators'
+                ],
+                impact: {
+                    banks: 'MEDIUM',
+                    brokers: 'MEDIUM',
+                    exchanges: 'HIGH',
+                    custodians: 'MEDIUM',
+                    defi: 'HIGH',
+                    stablecoins: 'HIGH'
+                },
+                tags: ['doj', 'enforcement', 'fraud', 'ransomware']
+            },
+            {
+                id: 'occ-letters',
+                title: 'OCC Interpretive Letters',
+                fullName: 'OCC Guidance on Bank Crypto Activities',
+                status: 'enacted',
+                agency: 'OCC',
+                date: '2023-2025',
+                description: 'Series of OCC interpretive letters clarifying bank authority to conduct crypto custody, settlement, and stablecoin activities.',
+                keyProvisions: [
+                    'Bank crypto custody authority (Section 21(c) of the Bank Secrecy Act)',
+                    'Stablecoin issuance conditions (reserve requirements, governance)',
+                    'Settlement and payment rail participation',
+                    'Node operation and validator activity guidance',
+                    'Third-party service provider requirements'
+                ],
+                compliance: [
+                    'Banks seeking crypto activities must align with OCC letter precedent',
+                    'Board and audit committee governance for crypto programs',
+                    'Third-party vendor risk management (ITIL/NIST standards)',
+                    'Custody control frameworks per BSA/AML requirements',
+                    'Exam readiness: OCC crypto examination handbook'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'MEDIUM',
+                    exchanges: 'MEDIUM',
+                    custodians: 'HIGH',
+                    defi: 'LOW',
+                    stablecoins: 'HIGH'
+                },
+                tags: ['occ', 'custody', 'guidance', 'banks']
+            },
+            {
+                id: 'fdic-guidance',
+                title: 'FDIC Crypto Guidance (FIL)',
+                fullName: 'FDIC Guidance on Crypto-Related Activities',
+                status: 'enacted',
+                agency: 'FDIC',
+                date: '2022-2025',
+                description: 'FDIC guidance on bank participation in crypto activities, risk management, and examination expectations; updates through 2025.',
+                keyProvisions: [
+                    'Risk assessment framework for crypto activities',
+                    'Liquidity and asset quality impact assessment',
+                    'Third-party vendor due diligence standards',
+                    'Deposit insurance implications of stablecoin holdings',
+                    'Operational risk and cybersecurity controls'
+                ],
+                compliance: [
+                    'FDIC examination readiness for crypto programs',
+                    'Vendor assessment and ongoing monitoring',
+                    'Deposit insurance implications for stablecoin-related products',
+                    'Operational resilience testing (chaos engineering)',
+                    'Board-level reporting and governance'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'LOW',
+                    exchanges: 'MEDIUM',
+                    custodians: 'MEDIUM',
+                    defi: 'LOW',
+                    stablecoins: 'HIGH'
+                },
+                tags: ['fdic', 'guidance', 'risk-management', 'banks']
+            },
+            {
+                id: 'fed-policy',
+                title: 'Federal Reserve Crypto Policy',
+                fullName: 'Federal Reserve Statements on Digital Assets & CBDC',
+                status: 'monitoring',
+                agency: 'Federal Reserve',
+                date: '2023-2026',
+                description: 'Federal Reserve policy statements on bank crypto exposure, CBDC research (Project Hamilton), and crypto market systemic risk assessment.',
+                keyProvisions: [
+                    'Bank stress testing: crypto exposure scenarios',
+                    'CBDC exploration and research (2023-2026 timeline)',
+                    'Liquidity assessment for crypto-related banking activities',
+                    'Real-time payment system development (FedNow)',
+                    'Financial stability monitoring of stablecoin ecosystem'
+                ],
+                compliance: [
+                    'Monitor Fed statements for stress testing scenarios',
+                    'CBDC implications for bank settlement infrastructure',
+                    'Liquidity coverage ratio (LCR) treatment of crypto deposits',
+                    'Emergency lending facility (ELF) eligibility criteria',
+                    'Long-term digital currency readiness assessment'
+                ],
+                impact: {
+                    banks: 'HIGH',
+                    brokers: 'LOW',
+                    exchanges: 'MEDIUM',
+                    custodians: 'MEDIUM',
+                    defi: 'LOW',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['fed', 'cbdc', 'monetary-policy', 'systemic-risk']
+            },
+            {
+                id: 'nydfs',
+                title: 'NYDFS BitLicense & Guidance',
+                fullName: 'New York Department of Financial Services Crypto Regulation',
+                status: 'enacted',
+                agency: 'NYDFS',
+                date: '2015-2026',
+                description: 'NYDFS BitLicense framework and ongoing guidance for crypto activities in New York; state-level compliance driver.',
+                keyProvisions: [
+                    'BitLicense requirement for virtual asset service providers',
+                    'Cybersecurity requirements (23 NYCRR 200)',
+                    'Consumer protection and transparency rules',
+                    'Custody and operational control requirements',
+                    'AML/CFT integration into license conditions'
+                ],
+                compliance: [
+                    'BitLicense application if operating in NY market',
+                    'NYDFS 23 NYCRR 200 cybersecurity compliance',
+                    'Annual attestations and audit requirements',
+                    'Consumer disclosure standards',
+                    'State examination and enforcement coordination'
+                ],
+                impact: {
+                    banks: 'MEDIUM',
+                    brokers: 'HIGH',
+                    exchanges: 'HIGH',
+                    custodians: 'HIGH',
+                    defi: 'MEDIUM',
+                    stablecoins: 'HIGH'
+                },
+                tags: ['nydfs', 'bitlicense', 'state-regulation', 'cybersecurity']
+            },
+            {
+                id: 'sec-custody',
+                title: 'SEC Custody Rule Updates',
+                fullName: 'SEC Rule 206(4)-2 Custody Rule - Digital Assets',
+                status: 'proposed',
+                agency: 'SEC',
+                date: '2024-2026',
+                description: 'SEC proposed amendments to Custody Rule (206(4)-2) addressing digital asset custody standards for investment advisors.',
+                keyProvisions: [
+                    'Qualified custodian requirements for digital assets',
+                    'Third-party control requirements',
+                    'Annual surprise audit expectations',
+                    'Cybersecurity and cold storage standards',
+                    'Client segregation and bankruptcy remoteness'
+                ],
+                compliance: [
+                    'Advisor custody procedures aligned with SEC expectations',
+                    'Qualified custodian partnerships and due diligence',
+                    'Annual surprise audit scheduling and SOC 2 requirements',
+                    'Custody documentation and control testing',
+                    'Client notification of custody arrangements'
+                ],
+                impact: {
+                    banks: 'MEDIUM',
+                    brokers: 'HIGH',
+                    exchanges: 'MEDIUM',
+                    custodians: 'HIGH',
+                    defi: 'LOW',
+                    stablecoins: 'MEDIUM'
+                },
+                tags: ['sec', 'custody', 'investment-advisors', 'standards']
+            }
+        ];
+
+        // Agencies Data
+        const agenciesData = [
+            {
+                name: 'SEC',
+                fullName: 'Securities and Exchange Commission',
+                lead: 'Chair Gary Gensler',
+                stance: 'restrictive',
+                stanceLabel: 'Restrictive',
+                keyActions: [
+                    'Enforcement against unregistered exchanges and advisors',
+                    'SAB 121/122 accounting guidance',
+                    'Custody Rule updates for digital assets',
+                    'Bot regulation and market structure concerns'
+                ]
+            },
+            {
+                name: 'CFTC',
+                fullName: 'Commodity Futures Trading Commission',
+                lead: 'Chair Rostin Behnam',
+                stance: 'proactive',
+                stanceLabel: 'Proactive',
+                keyActions: [
+                    'Crypto derivatives market oversight',
+                    'FIT21 co-sponsorship and market structure advocacy',
+                    'Clearinghouse and exchange standards',
+                    'Spot market regulation exploration'
+                ]
+            },
+            {
+                name: 'FinCEN',
+                fullName: 'Financial Crimes Enforcement Network',
+                lead: 'Acting Director Himamauli Das',
+                stance: 'cautious',
+                stanceLabel: 'Cautious',
+                keyActions: [
+                    'Travel Rule implementation (CVC/LTDA)',
+                    'Mixer rulemaking and PMLC designation',
+                    'VASP guidance and compliance monitoring',
+                    'SAR reporting standardization for crypto'
+                ]
+            },
+            {
+                name: 'OFAC',
+                fullName: 'Office of Foreign Assets Control',
+                lead: 'Director Andrea Gacki',
+                stance: 'proactive',
+                stanceLabel: 'Proactive',
+                keyActions: [
+                    'Tornado Cash and mixer sanctions',
+                    'Cryptocurrency SDN designations',
+                    'Sanctions evasion enforcement',
+                    'Guidance on crypto OFAC compliance'
+                ]
+            },
+            {
+                name: 'OCC',
+                fullName: 'Office of the Comptroller of the Currency',
+                lead: 'Acting Comptroller Michael J. Hsu',
+                stance: 'proactive',
+                stanceLabel: 'Proactive',
+                keyActions: [
+                    'Interpretive letters on bank crypto activities',
+                    'Stablecoin reserve requirements framework',
+                    'Bank examination handbook updates',
+                    'Custody and settlement participation guidance'
+                ]
+            },
+            {
+                name: 'FDIC',
+                fullName: 'Federal Deposit Insurance Corporation',
+                lead: 'Chair Rohit Chopra (incoming)',
+                stance: 'cautious',
+                stanceLabel: 'Cautious',
+                keyActions: [
+                    'Guidance on crypto-related activities',
+                    'Examination and risk assessment',
+                    'Third-party vendor due diligence',
+                    'Deposit insurance implications guidance'
+                ]
+            },
+            {
+                name: 'Federal Reserve',
+                fullName: 'Board of Governors of the Federal Reserve System',
+                lead: 'Chair Jerome Powell',
+                stance: 'cautious',
+                stanceLabel: 'Cautious',
+                keyActions: [
+                    'Crypto exposure stress testing',
+                    'CBDC research (Project Hamilton)',
+                    'FedNow real-time payment system',
+                    'Financial stability assessment'
+                ]
+            },
+            {
+                name: 'DOJ',
+                fullName: 'Department of Justice',
+                lead: 'AG Merrick Garland',
+                stance: 'restrictive',
+                stanceLabel: 'Restrictive',
+                keyActions: [
+                    'Crypto and sanctions evasion prosecutions',
+                    'Developer liability framework development',
+                    'Ransomware and cybercrime enforcement',
+                    'International coordination'
+                ]
+            },
+            {
+                name: 'NYDFS',
+                fullName: 'New York Department of Financial Services',
+                lead: 'Superintendent Adrienne Harris',
+                stance: 'proactive',
+                stanceLabel: 'Proactive',
+                keyActions: [
+                    'BitLicense enforcement and updates',
+                    'Cybersecurity Rule (23 NYCRR 200) oversight',
+                    'State-level crypto policy leadership',
+                    'Consumer protection focus'
+                ]
+            }
+        ];
+
+        // Timeline Data (sorted by date)
+        const timelineData = [
+            { date: 'Aug 2022', title: 'Tornado Cash Designated', description: 'OFAC lists Tornado Cash smart contract addresses as SDN, marking first software sanction.' },
+            { date: 'May 2023', title: 'SAB 121 Issued', description: 'SEC Staff Accounting Bulletin clarifying crypto custody accounting for public companies.' },
+            { date: 'Nov 2023', title: 'OCC Crypto Guidance', description: 'OCC issues letters clarifying bank authority for crypto custody, settlement, and stablecoin issuance.' },
+            { date: 'Feb 2024', title: 'FIT21 Advances', description: 'Financial Innovation and Technology Act advances in Congress with jurisdiction clarity framework.' },
+            { date: 'Mar 2024', title: 'FinCEN Mixer PMLC', description: 'FinCEN proposes rulemaking designating mixing services as primary money laundering concern.' },
+            { date: 'Jun 2024', title: 'GENIUS Act Introduced', description: 'Guiding and Establishing National Innovation for US Stablecoins Act introduced in Congress.' },
+            { date: 'Oct 2024', title: 'Tornado Developer Conviction', description: 'First developer conviction related to Tornado Cash; legal precedent for software sanctions.' },
+            { date: 'Jan 2025', title: 'Fed CBDC Research Continues', description: 'Federal Reserve advances Project Hamilton research; implications for payment systems.' },
+            { date: 'Feb 2025', title: 'Travel Rule CVC Adoption', description: 'Crypto VC protocol adoption accelerates; LTDA framework moving toward implementation.' },
+            { date: 'Mar 2026', title: 'GENIUS Act Status', description: 'GENIUS Act in active negotiation phase; stablecoin reserve framework taking shape.' }
+        ];
+
+        // Impact Matrix Data
+        const impactMatrixData = [
+            { legislation: 'GENIUS Act', banks: 'HIGH', brokers: 'MEDIUM', exchanges: 'HIGH', custodians: 'HIGH', defi: 'HIGH', stablecoins: 'HIGH' },
+            { legislation: 'FIT21', banks: 'MEDIUM', brokers: 'HIGH', exchanges: 'HIGH', custodians: 'HIGH', defi: 'HIGH', stablecoins: 'MEDIUM' },
+            { legislation: 'SAB 121/122', banks: 'HIGH', brokers: 'HIGH', exchanges: 'MEDIUM', custodians: 'HIGH', defi: 'MEDIUM', stablecoins: 'MEDIUM' },
+            { legislation: 'FinCEN Mixers', banks: 'HIGH', brokers: 'MEDIUM', exchanges: 'HIGH', custodians: 'HIGH', defi: 'HIGH', stablecoins: 'MEDIUM' },
+            { legislation: 'Travel Rule', banks: 'MEDIUM', brokers: 'MEDIUM', exchanges: 'HIGH', custodians: 'HIGH', defi: 'MEDIUM', stablecoins: 'MEDIUM' },
+            { legislation: 'Tornado Cash', banks: 'HIGH', brokers: 'HIGH', exchanges: 'HIGH', custodians: 'HIGH', defi: 'HIGH', stablecoins: 'MEDIUM' },
+            { legislation: 'DOJ Framework', banks: 'MEDIUM', brokers: 'MEDIUM', exchanges: 'HIGH', custodians: 'MEDIUM', defi: 'HIGH', stablecoins: 'HIGH' },
+            { legislation: 'OCC Letters', banks: 'HIGH', brokers: 'MEDIUM', exchanges: 'MEDIUM', custodians: 'HIGH', defi: 'LOW', stablecoins: 'HIGH' }
+        ];
+
+        // State management
+        let currentView = 'card';
+        let filteredData = [...regulatoryData];
+        let selectedStatusFilter = 'all';
+        let selectedAgencyFilter = 'all';
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('light-mode');
+            themeToggle.textContent = document.documentElement.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
+        });
+
+        // View switching
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentView = e.target.dataset.view;
+                switchView();
+            });
+        });
+
+        function switchView() {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            if (currentView === 'card') {
+                document.getElementById('cardView').classList.add('active');
+                renderCards();
+            } else if (currentView === 'timeline') {
+                document.getElementById('timelineView').classList.add('active');
+                renderTimeline();
+            } else if (currentView === 'agencies') {
+                document.getElementById('agenciesView').classList.add('active');
+                renderAgencies();
+            } else if (currentView === 'impact') {
+                document.getElementById('impactView').classList.add('active');
+                renderImpact();
+            }
+        }
+
+        // Initialize agency filters
+        function initAgencyFilters() {
+            const agencyNames = [...new Set(regulatoryData.map(r => r.agency))];
+            const container = document.getElementById('agencyFilters');
+            container.innerHTML = '<button class="filter-btn active" data-filter="all">All</button>';
+            agencyNames.forEach(agency => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.textContent = agency;
+                btn.dataset.filter = agency;
+                btn.addEventListener('click', () => {
+                    selectedAgencyFilter = agency;
+                    applyFilters();
+                    updateActiveFilterButtons('agency', agency);
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        // Filter and search
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedStatusFilter = btn.dataset.filter;
+                applyFilters();
+                updateActiveFilterButtons('status', btn.dataset.filter);
+            });
+        });
+
+        function updateActiveFilterButtons(type, value) {
+            const container = type === 'status' ? document.getElementById('statusFilters') : document.getElementById('agencyFilters');
+            container.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === value || (value === 'all' && btn.dataset.filter === 'all'));
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            filteredData = regulatoryData.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(searchTerm) ||
+                    item.fullName.toLowerCase().includes(searchTerm) ||
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.tags.some(tag => tag.includes(searchTerm));
+                const matchesStatus = selectedStatusFilter === 'all' || item.status === selectedStatusFilter;
+                const matchesAgency = selectedAgencyFilter === 'all' || item.agency === selectedAgencyFilter;
+                return matchesSearch && matchesStatus && matchesAgency;
+            });
+            if (currentView === 'card') renderCards();
+        }
+
+        // Render cards
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            if (filteredData.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1"><p>No results found. Try adjusting your filters.</p></div>';
+                return;
+            }
+            container.innerHTML = filteredData.map(item => `
+                <div class="card" data-id="${item.id}">
+                    <div class="card-header">
+                        <div class="card-title">${item.title}</div>
+                        <span class="badge badge-${item.status}">${item.status.toUpperCase()}</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-description">${item.description}</div>
+                        <div class="card-tags">${item.tags.map(tag => `<span class="card-tag">${tag}</span>`).join('')}</div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-meta">${item.agency}</span>
+                        <span class="card-expand">+</span>
+                    </div>
+                    <div class="expanded-content">
+                        <div class="detail-section">
+                            <h4>Full Name</h4>
+                            <div class="detail-text">${item.fullName}</div>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Key Provisions</h4>
+                            <ul class="detail-list">${item.keyProvisions.map(p => `<li>${p}</li>`).join('')}</ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Compliance Requirements</h4>
+                            <ul class="detail-list">${item.compliance.map(c => `<li>${c}</li>`).join('')}</ul>
+                        </div>
+                        <div class="detail-section">
+                            <h4>Sector Impact</h4>
+                            <div class="detail-text">
+                                Banks: <strong class="impact-${item.impact.banks.toLowerCase()}">${item.impact.banks}</strong> | 
+                                Brokers: <strong class="impact-${item.impact.brokers.toLowerCase()}">${item.impact.brokers}</strong> | 
+                                Exchanges: <strong class="impact-${item.impact.exchanges.toLowerCase()}">${item.impact.exchanges}</strong> | 
+                                Custodians: <strong class="impact-${item.impact.custodians.toLowerCase()}">${item.impact.custodians}</strong> | 
+                                DeFi: <strong class="impact-${item.impact.defi.toLowerCase()}">${item.impact.defi}</strong> | 
+                                Stablecoins: <strong class="impact-${item.impact.stablecoins.toLowerCase()}">${item.impact.stablecoins}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Card expansion
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.card').forEach(c => c !== card && c.classList.remove('expanded'));
+                    card.classList.toggle('expanded');
+                });
+            });
+        }
+
+        // Render timeline
+        function renderTimeline() {
+            const container = document.getElementById('timelineContainer');
+            container.innerHTML = timelineData.map((item, idx) => `
+                <div class="timeline-item">
+                    <div class="timeline-marker">${idx + 1}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">${item.date}</div>
+                        <div class="timeline-title">${item.title}</div>
+                        <div class="timeline-description">${item.description}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render agencies
+        function renderAgencies() {
+            const container = document.getElementById('agenciesContainer');
+            container.innerHTML = agenciesData.map(agency => `
+                <div class="agency-card">
+                    <div class="agency-header">
+                        <div class="agency-name">${agency.name}</div>
+                        <div class="agency-lead">${agency.lead}</div>
+                        <div class="agency-stance stance-${agency.stance.toLowerCase()}">${agency.stanceLabel}</div>
+                    </div>
+                    <div class="agency-items">
+                        <strong style="color: var(--text-primary);">Key Actions:</strong><br>
+                        ${agency.keyActions.map(action => `▸ ${action}`).join('<br>')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render impact matrix
+        function renderImpact() {
+            const container = document.getElementById('impactContainer');
+            const tableHtml = `
+                <table class="impact-table">
+                    <thead>
+                        <tr>
+                            <th>Legislation</th>
+                            <th>Banks</th>
+                            <th>Brokers</th>
+                            <th>Exchanges</th>
+                            <th>Custodians</th>
+                            <th>DeFi</th>
+                            <th>Stablecoins</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${impactMatrixData.map(row => `
+                            <tr>
+                                <td><strong>${row.legislation}</strong></td>
+                                <td class="impact-${row.banks.toLowerCase()}">${row.banks}</td>
+                                <td class="impact-${row.brokers.toLowerCase()}">${row.brokers}</td>
+                                <td class="impact-${row.exchanges.toLowerCase()}">${row.exchanges}</td>
+                                <td class="impact-${row.custodians.toLowerCase()}">${row.custodians}</td>
+                                <td class="impact-${row.defi.toLowerCase()}">${row.defi}</td>
+                                <td class="impact-${row.stablecoins.toLowerCase()}">${row.stablecoins}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        // Initialize
+        initAgencyFilters();
+        renderCards();
+    </script>
+</body>
+</html>

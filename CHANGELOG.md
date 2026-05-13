@@ -12,6 +12,35 @@ Framework continues to evolve. See commit history for in-progress changes.
 
 ---
 
+## [1.2.0] — 2026-05-13
+
+Two new runnable reference agents, companion analytical dashboards, and the Fleet Evolution pattern.
+
+### Added
+
+- `agents/regulatory_oracle/` — fourth runnable reference agent. Daily digital-asset and AML/CFT regulatory briefing covering FinCEN, OFAC, OCC, SEC, CFTC, Federal Reserve, plus material international developments (MiCA, FCA, FATF, BIS). Severity-rated findings (CRITICAL / HIGH / MEDIUM), upcoming-deadlines section, watchlist. Stateless one-shot variant of the longer-form `examples/regulatory-oracle/AGENT.md`.
+- `.github/workflows/regulatory-oracle.yml` — daily 12:00 UTC cron
+- `agents/synthesis_engine/` — fifth runnable reference agent. Daily meta-analysis over the rest of the fleet's output — four analytical passes (cross-cutting themes, contradictions, coverage gaps, novel connections). Reads sibling agents' GitHub Actions run history via `gh` CLI as a minimal stateless proxy for fleet output. Capstone agent — only earns its keep with multiple sibling agents producing daily intelligence.
+- `.github/workflows/synthesis-engine.yml` — daily 01:00 UTC cron (21:00 ET, after sibling agents have run)
+- `tests/test_agents.py` — five additional tests covering the two new agents (prompt existence, no-token degradation, end-to-end mock run). Test count: 18 → 23.
+- `docs/patterns/fleet-evolution.md` — new pattern doc covering the five-level maturity framework (L1 SCOUT → L5 MASTER), one-upgrade-per-cycle discipline, experiment tracking, and rollback protocol. Eighth core pattern.
+- `showcase/` — companion analytical dashboards:
+  - `crypto-aml-typology-engine/` — 15-typology reference library (sanctions evasion, money laundering, fraud, market manipulation) with detection rules and regulatory citations
+  - `regulatory-intelligence-tracker/` — filterable view of the active digital-asset regulatory landscape
+  - `images/` — screenshots embedded in the main README
+- README "Showcase — Companion Analytical Surfaces" section with embedded screenshot and links to the visual half of the output stack
+
+### Changed
+
+- README runnable-agents table extended from three to five agents
+- README Core Patterns table extended from seven to eight patterns (added Fleet Evolution)
+- README repository-structure tree updated to reflect new agent directories and the `showcase/` tree, and the five-workflow count
+- `FLEET-OPS.md` Fleet Evolution Engine section expanded with link to the new pattern doc and detail on the one-upgrade-per-cycle constraint
+- `agents/fleet_watchdog/agent.py` `TRACKED_WORKFLOWS` extended to include the two new agent workflows so the watchdog reports across the full runnable fleet
+- `tests/test_agents.py` lint cleanup — redundant `MagicMock` imports consolidated to the module-level import; updated `test_collect_workflow_health_parses_gh_output` expected-length to match the extended `TRACKED_WORKFLOWS`
+
+---
+
 ## [1.1.0] — 2026-04-20
 
 Runnable Python reference implementations and full engineering scaffolding.

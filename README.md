@@ -14,19 +14,21 @@ A reference architecture for operating multiple autonomous agents as a cohesive 
 
 Every agent is a structured natural language prompt executed on a schedule. Agents gather live data from external sources, maintain persistent memory across runs via Slack Canvases and a SQLite data layer, rate their own output quality, and — when something breaks — repair themselves without human intervention. A JIT budget manager monitors fleet-wide token consumption and autonomously throttles agent frequencies as resource limits approach, preserving output quality by reducing run count rather than degrading the model or prompt depth.
 
-This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Fifteen additional agent specs are included in `examples/` as prompt-only references.
+This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Fifteen additional agent specs are included in `examples/` as prompt-only references, and companion analytical dashboards in [`showcase/`](showcase/) illustrate the visual half of the output stack.
 
 ---
 
 ## Running the Reference Agents
 
-Three agents ship as runnable Python modules backed by the Anthropic Messages API, with GitHub Actions workflows for scheduled execution.
+Five agents ship as runnable Python modules backed by the Anthropic Messages API, with GitHub Actions workflows for scheduled execution.
 
 | Agent | Schedule | Output |
 |-------|----------|--------|
 | [`research_digest`](agents/research_digest/) | Daily 11:00 UTC | Synthesis of noteworthy AI/ML developments |
 | [`market_monitor`](agents/market_monitor/) | Every 8h | Crypto market snapshot + narrative |
+| [`regulatory_oracle`](agents/regulatory_oracle/) | Daily 12:00 UTC | Digital-asset and AML/CFT regulatory briefing |
 | [`fleet_watchdog`](agents/fleet_watchdog/) | Every 6h | Fleet health report from GitHub Actions run history |
+| [`synthesis_engine`](agents/synthesis_engine/) | Daily 01:00 UTC | Meta-analysis across sibling agents' runs — themes, contradictions, gaps |
 
 ### Local
 
@@ -146,7 +148,7 @@ Full architecture documentation: **[ARCHITECTURE.md](ARCHITECTURE.md)**
 
 ## Core Patterns
 
-Seven architectural patterns form the foundation of the framework. Each has its own deep-dive documentation:
+Eight architectural patterns form the foundation of the framework. Each has its own deep-dive documentation:
 
 | Pattern | What It Solves |
 |---------|----------------|
@@ -156,6 +158,7 @@ Seven architectural patterns form the foundation of the framework. Each has its 
 | **[Execution Scaffolding](docs/patterns/execution-scaffolding.md)** | Threshold-triggered pre-filled action packages — agents do the prep, humans approve |
 | **[JIT Budget Management](docs/patterns/jit-budget-management.md)** | Autonomous throttle protocol that reduces run frequency under resource pressure (never quality) |
 | **[Self-Repair](docs/patterns/self-repair.md)** | Fleet agents scan configurations, detect drift, apply safe fixes autonomously |
+| **[Fleet Evolution](docs/patterns/fleet-evolution.md)** | Weekly autonomous maturity assessment + one-upgrade-per-cycle loop with experiment tracking |
 | **[Visual Cards](docs/patterns/visual-cards.md)** | Dynamic PNG cards embedded in Slack output for at-a-glance dense information |
 
 ---
@@ -170,6 +173,21 @@ End-to-end walkthroughs showing what the framework actually delivers:
 | **[On-Chain Sanctions Hit](docs/case-studies/onchain-sanctions-hit.md)** | Monitored address triggers alert → watchlist enriches with typology → critical escalation + incident response package |
 | **[Daily Intelligence Digest](docs/case-studies/daily-intelligence-digest.md)** | Six agents consolidate into a single 500-word morning brief the operator reads in four minutes |
 | **[Agent Self-Repair](docs/case-studies/agent-self-repair.md)** | Watchdog detects degraded agent → auto-repair diagnoses → fix applied → validated — zero operator time |
+
+---
+
+## Showcase — Companion Analytical Surfaces
+
+Static, single-file HTML dashboards that share the same domain focus as the agent fleet. Independent reference artifacts illustrating the visual half of the output stack — text intelligence from agents in `agents/`, visual surfaces for the operator in `showcase/`.
+
+| Dashboard | What It Is |
+|-----------|------------|
+| **[Crypto AML Typology Engine](showcase/crypto-aml-typology-engine/)** | Reference library of 15 crypto AML typologies — sanctions evasion, money laundering, fraud — with detection rules and regulatory citations |
+| **[Digital Asset Regulatory Intelligence Tracker](showcase/regulatory-intelligence-tracker/)** | Filterable view of the active digital-asset regulatory landscape — proposed legislation, agency rulemaking, enforcement actions |
+
+![Crypto AML Typology Engine](showcase/images/crypto-aml-typology-engine.png)
+
+See **[showcase/README.md](showcase/README.md)** for context, audience, and how the showcase relates to the agent fleet's output stack.
 
 ---
 
@@ -283,16 +301,24 @@ Claude-Agent-Fleet/
 ├── agents/                               # Runnable Python reference agents
 │   ├── research_digest/                  # Daily AI/ML research synthesis
 │   ├── market_monitor/                   # Crypto market snapshot + narrative
-│   └── fleet_watchdog/                   # Fleet health via GH Actions run history
+│   ├── regulatory_oracle/                # Daily digital-asset + AML/CFT briefing
+│   ├── fleet_watchdog/                   # Fleet health via GH Actions run history
+│   └── synthesis_engine/                 # Meta-analysis across sibling agents
 │
-├── tests/                                # 18 unit + integration tests
+├── showcase/                             # Companion analytical dashboards
+│   ├── README.md                         # Positioning, audience, how to view
+│   ├── images/                           # Screenshots embedded in main README
+│   ├── crypto-aml-typology-engine/       # 15-typology AML reference library
+│   └── regulatory-intelligence-tracker/  # Digital-asset regulatory landscape
+│
+├── tests/                                # 23 unit + integration tests
 │   ├── test_config.py
 │   ├── test_runner.py
 │   ├── test_publisher.py
 │   └── test_agents.py
 │
 ├── .github/
-│   ├── workflows/                        # ci.yml + 3 scheduled agent workflows
+│   ├── workflows/                        # ci.yml + 5 scheduled agent workflows
 │   ├── ISSUE_TEMPLATE/                   # Bug and feature templates
 │   ├── pull_request_template.md
 │   └── dependabot.yml                    # Weekly pip + actions updates

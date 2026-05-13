@@ -149,7 +149,9 @@ This agent doesn't just alert on problems — it fixes them autonomously:
 - Repeated failures of the same agent
 
 ### Fleet Evolution Engine (weekly)
-Assesses each agent against a 5-level maturity framework (SCOUT through MASTER). Identifies the highest-impact upgrade across the fleet and implements it autonomously. Tracks upgrade experiments and outcomes in the data layer.
+Assesses each agent against a 5-level maturity framework (L1 SCOUT → L5 MASTER). Identifies the highest-impact upgrade across the fleet and implements it autonomously, with strict one-upgrade-per-cycle discipline. Tracks each upgrade as a structured experiment with pre- and post-upgrade metrics in the data layer; evaluates outcomes after a two-week window and rolls back upgrades that didn't pay off.
+
+See [`docs/patterns/fleet-evolution.md`](docs/patterns/fleet-evolution.md) for the level definitions, scoring criteria, and the rationale behind the bounded-cycle design.
 
 ### Feedback Harvester (daily)
 Tracks emoji reactions on agent posts across all channels. Calculates engagement scores per agent to measure which intelligence outputs are actually valued by the operator. Feeds into the Evolution Engine's prioritization.
