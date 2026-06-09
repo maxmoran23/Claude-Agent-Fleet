@@ -106,11 +106,11 @@ Deploy the [Fleet Watchdog](examples/fleet-watchdog/AGENT.md). It auto-discovers
 
 ### Step 2: Standardize the pattern
 Every agent should follow Steps 0–7:
-- **Step 0**: Load state (from canvas or local file)
+- **Step 0**: Load state from the local authority file (canvas reads are optional cross-agent context)
 - **Steps 1–5**: Gather, analyze, self-assess, format, deliver
 - **Step 6**: Update any live dashboards
 - **Step 6.5**: Write to the SQLite data layer (historical record)
-- **Step 7**: Persist state for the next run
+- **Step 7**: Persist state to the local file for the next run, then mirror to any display canvas (non-fatal)
 
 ### Step 3: Add delivery channels
 Connect Slack for real-time posts, Gmail for digest emails (via a digest-aggregator agent), Calendar for push notifications. Start with Slack only — it's the primary backbone.

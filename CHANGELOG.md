@@ -12,6 +12,29 @@ Framework continues to evolve. See commit history for in-progress changes.
 
 ---
 
+## [1.3.0] — 2026-06-09
+
+Architecture refresh reflecting a full production re-foundation: state authority inversion, a shared agent kernel, gated self-modification, generated inventory, and independent quality measurement. Five new pattern docs; the state-management pattern rewritten.
+
+### Added
+
+- `docs/patterns/agent-kernel.md` — versioned kernel contract + shared CLI helpers (state load/persist, health footer, idempotency guard, fleet-wide FTS5 recall) replacing per-agent boilerplate. Pattern improvements become one-file edits; quality-scale validation gets a single choke point.
+- `docs/patterns/idempotency-outbox.md` — claim/confirm/fail dedup protocol for non-idempotent external actions (email, posts, trades), motivated by a production triple-send incident where only the send *confirmation* was lost, never the send.
+- `docs/patterns/propose-and-gate.md` — human-gated self-modification: complete proposal packages (proposed file + rationale + diff) on a dedicated branch, reaction-vote approval, isolated one-commit applications with one-commit rollback, 14-day expiry, and post-apply experiment measurement.
+- `docs/patterns/evaluation-harness.md` — independent measured-quality scoring (0–100) of published output via weighted structural rubrics; complements (never replaces) per-run self-rating; supplies before/after evidence for upgrade experiments.
+- `docs/patterns/generated-registry.md` — fleet inventory generated from six primary sources with an auto-computed drift section (model drift, schedule drift, instrumentation drift, kernel-adoption lag); includes the 4-tier model-policy intent design and the out-of-band deadman liveness check.
+
+### Changed
+
+- `docs/patterns/state-management.md` — rewritten as "State Authority and Projections": local per-agent state files are the single source of truth (atomic writes, 30-day history, explicit corruption handling); Slack canvases demoted to non-fatal display mirrors; SQLite remains the append-only ledger. Motivated by production canvas write-saturation that silently broke persistence under the old canvases-as-truth design.
+- `ARCHITECTURE.md` — state-management section rewritten around the authority/projection split; pattern index extended to 13 docs; agent-coupling section explains how the kernel shares mechanical helpers without coupling domain logic; JIT section updated for declared model-policy tiers.
+- `FLEET-OPS.md` — production cycle updated (Step 0/Step 7 now local-file-first via kernel helpers); observability layer extended with deadman liveness, measured-quality evals, and the generated registry; self-repair section split into autonomous fixes vs declared-intent drift flags; JIT section gains the 4-tier model policy with per-tier run weighting; fleet scaling checklist updated (manifest declaration, eval rubric, kernel adoption).
+- `README.md` — Core Patterns table extended from eight to thirteen; Key Design Decisions extended with inventory, external-send, observability, and gated-change rows; production pattern diagram updated for local-state authority.
+- `QUICKSTART.md` — Steps 0/7 updated for local-state authority.
+- `schemas/slack-canvas-structure.md` — retitled to display-canvas conventions with an authority note pointing at the new state-management pattern.
+
+---
+
 ## [1.2.0] — 2026-05-13
 
 Two new runnable reference agents, companion analytical dashboards, and the Fleet Evolution pattern.

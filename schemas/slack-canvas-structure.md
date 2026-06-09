@@ -1,12 +1,14 @@
-# Schema: Slack Canvas State Store Structure
+# Schema: Slack Canvas Display Structure
 
-Conventions for state stores implemented as Slack Canvases.
+Conventions for display canvases — the human-glanceable projection layer.
+
+> **Authority note:** earlier framework revisions used canvases as the *source of truth* for agent state. After canvases hit platform write-saturation limits in production, authority moved to local per-agent state files; canvases are now display mirrors updated non-fatally at Step 7. See [docs/patterns/state-management.md](../docs/patterns/state-management.md). The structural conventions below still apply to the display layer.
 
 ---
 
 ## Why Slack Canvases
 
-The fleet uses Slack Canvases as agent-writable, human-readable, human-editable persistent state stores. This choice solves several problems:
+The fleet uses Slack Canvases as agent-writable, human-readable, human-editable display surfaces. This choice solves several problems:
 
 - **No database required for live state.** Canvases are hosted by Slack; agents write via the Slack API
 - **Human-inspectable.** The operator can open a canvas at any time and see exactly what the agent currently knows

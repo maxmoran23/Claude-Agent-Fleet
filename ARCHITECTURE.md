@@ -36,12 +36,18 @@ This is non-negotiable: under pressure, the fleet produces less output at the sa
 
 The architectural patterns that implement these principles are documented individually:
 
-- **[State Management](docs/patterns/state-management.md)** — two-tier state (canvases + SQLite)
+- **[State Management](docs/patterns/state-management.md)** — state authority and projections (local files as truth, canvases as mirrors)
+- **[Agent Kernel](docs/patterns/agent-kernel.md)** — versioned contract + shared helpers replacing per-agent boilerplate
 - **[Fallback Chains](docs/patterns/fallback-chains.md)** — graceful source degradation
 - **[Quality Self-Rating](docs/patterns/quality-self-rating.md)** — per-run self-assessment
+- **[Evaluation Harness](docs/patterns/evaluation-harness.md)** — independent rubric scoring of published output
+- **[Idempotency Outbox](docs/patterns/idempotency-outbox.md)** — claim/confirm dedup for non-idempotent sends
 - **[Execution Scaffolding](docs/patterns/execution-scaffolding.md)** — threshold-triggered action packages
 - **[JIT Budget Management](docs/patterns/jit-budget-management.md)** — autonomous throttle protocol
 - **[Self-Repair](docs/patterns/self-repair.md)** — autonomous configuration healing
+- **[Propose-and-Gate](docs/patterns/propose-and-gate.md)** — human-gated, revertible self-modification
+- **[Generated Registry](docs/patterns/generated-registry.md)** — generated inventory, drift detection, deadman liveness
+- **[Fleet Evolution](docs/patterns/fleet-evolution.md)** — maturity framework and bounded upgrade cycles
 - **[Visual Cards](docs/patterns/visual-cards.md)** — inline PNG dashboard cards
 
 And the schemas that define the framework's data contracts:
@@ -90,66 +96,67 @@ Agents execute remotely on Anthropic's infrastructure via scheduled tasks. The s
 ### The Problem
 Agents are stateless by default — each scheduled run is a fresh invocation with no memory of previous runs. Useful intelligence agents need to know what they reported last time, what positions they hold, what they've already seen.
 
-### The Solution: Two-Tier State Architecture
+### The Solution: One Authority, Multiple Projections
 
-**Tier 1: Live State (Slack Canvases)** — 4 persistent canvases serve as real-time dashboards that agents read from and write to on every run. Each agent owns its section; writes are section-level only (never full-canvas overwrites). This is the "working memory" layer.
+Earlier revisions of this framework treated Slack canvases as the source of truth for live state. That design failed in production: canvases hit platform write-saturation limits and began rejecting appends, and because they were authoritative, agents silently lost persistence. The current architecture designates exactly one authority and demotes everything else to projections.
 
-**Tier 2: Historical State (SQLite Data Layer)** — An append-only database (11 tables) serves as the permanent record. Canvases show current state; the data layer answers "what was true on date X?" Designed to be migration-compatible with hosted databases.
+**Authority: Local State Files** — Each agent owns `state/state.json` in its own directory: durable, atomically written (temp file + rename), version-stamped, with a 30-day rolling history for recovery. Kernel helpers implement the load (Step 0) and persist (Step 7) protocol, including explicit corruption handling — a state file that fails to decode is treated as first-run and preserved, never overwritten. A generated `state-index.json` tracks which agents have state and how fresh it is.
+
+**Projection: Slack Canvases** — Real-time display dashboards mirrored at Step 7. Each agent owns its section; writes are section-level and *non-fatal* — a canvas failure degrades the display, never the state.
+
+**Projection: SQLite Data Layer** — An append-only database (11 tables) serves as the permanent record and answers "what was true on date X?" Designed to be migration-compatible with hosted databases.
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│           TIER 1: LIVE STATE (4 Canvases)            │
+│       AUTHORITY: LOCAL STATE FILES                   │
 │                                                      │
-│  ┌─────────────┐  ┌─────────────┐                   │
-│  │   Market     │  │ Regulatory  │                   │
-│  │   State      │  │   State     │                   │
-│  │  Prices,     │  │  Rules,     │                   │
-│  │  positions,  │  │  enforcement│                   │
-│  │  sentiment   │  │  deadlines  │                   │
-│  └─────────────┘  └─────────────┘                   │
-│  ┌─────────────┐  ┌─────────────┐                   │
-│  │   Fleet      │  │  Analytics  │                   │
-│  │   State      │  │   State     │                   │
-│  │  Health,     │  │  Signals,   │                   │
-│  │  JIT budget, │  │  models,    │                   │
-│  │  quality     │  │  tracking   │                   │
-│  └─────────────┘  └─────────────┘                   │
+│  {agent}/state/state.json                            │
+│  - Atomic writes (tmp + rename), stamped with        │
+│    agent, last_run, kernel_version                   │
+│  - state/history/ snapshots, 30-day retention        │
+│  - Fleet-wide state-index.json registry              │
 │                                                      │
 │  PROTOCOL:                                           │
-│  - Step 0: Read own section from canvas              │
-│  - Step 7: Write back run log + state changes        │
-│  - Section-level writes only (never full canvas)     │
-│  - Human-readable at all times                       │
-└──────────────────────────────────────────────────────┘
-
+│  - Step 0: kernel loader -> loaded | FIRST_RUN |     │
+│    corrupt (treat as first-run, never overwrite)     │
+│  - Step 7: kernel persist, THEN mirror to canvas     │
+└──────────────┬───────────────────────────────────────┘
+               │ projects to
+               ▼
 ┌──────────────────────────────────────────────────────┐
-│       TIER 2: HISTORICAL STATE (SQLite)              │
-│                                                      │
+│  PROJECTION 1: DISPLAY CANVASES (human glanceable)   │
+│  Market / Regulatory / Fleet / Analytics sections    │
+│  Section-level mirror writes — failure is non-fatal  │
+├──────────────────────────────────────────────────────┤
+│  PROJECTION 2: HISTORICAL STATE (SQLite)             │
 │  11 tables: fleet_metrics, market_snapshots,         │
 │  predictions, portfolio_snapshots, agent_runs,       │
 │  regulatory_events, betting_edges,                   │
 │  opportunity_pipeline, execution_outcomes,           │
-│  upgrade_experiments, attention_audit                 │
-│                                                      │
-│  PROTOCOL:                                           │
+│  upgrade_experiments, attention_audit                │
 │  - Step 6.5: Append-only writes after delivery       │
 │  - Fleet Query reads for historical/trend questions  │
 │  - Daily backup to cloud storage                     │
 └──────────────────────────────────────────────────────┘
 ```
 
-**Why Slack Canvases for live state instead of a database?**
-- No infrastructure to maintain
+**Why local files for authority instead of canvases?**
+- Saturation-proof — platform write limits degrade the display, not the memory
+- Atomic and recoverable — temp-file writes plus a rolling history directory
+- Inspectable and versionable — state changes show up in version control like any other diff
+
+**Why keep canvases at all?**
 - Human-readable — open a canvas and see exactly what any agent "remembers"
-- Agents read/write via existing MCP tools
-- Survives restarts, reconfigurations, and failures
-- Multiple agents can share state without file coupling
+- Cross-agent context — agents read sibling sections at Step 0 (advisory, never blocking)
+- No infrastructure to maintain; read/write via existing MCP tools
 
 **Why SQLite for history instead of a hosted database?**
 - Zero setup, zero cost, zero network dependency
 - Schema is Supabase/Postgres-compatible — migration-ready when scale demands it
 - Agents write via simple bash commands (sqlite3) — no ORM, no SDK
 - Fleet Query agent reads via `sqlite3 -json` for structured historical queries
+
+Full pattern: [docs/patterns/state-management.md](docs/patterns/state-management.md).
 
 ---
 
@@ -223,7 +230,7 @@ LAYER 6: BUDGET MANAGEMENT
        Agent A can be deleted without affecting Agent Z.
 ```
 
-This is a critical design choice. Traditional multi-agent systems often create tight coupling through shared utilities, common configs, or direct agent-to-agent calls. This fleet deliberately avoids all of that. The cost is some duplication across agent configs. The benefit is absolute fault isolation.
+This is a critical design choice. Traditional multi-agent systems often create tight coupling through shared utilities, common configs, or direct agent-to-agent calls. This fleet deliberately avoids all of that. The benefit is absolute fault isolation. The historical cost — duplicated boilerplate across agent configs — is addressed by the [agent kernel](docs/patterns/agent-kernel.md): shared *mechanical* helpers (state load/persist, footers, dedup guards) without shared *domain* logic, so a kernel outage degrades gracefully while agents remain independently deletable.
 
 ---
 
@@ -249,7 +256,7 @@ The delivery pipeline has been consolidated through iteration. The current archi
 
 ## JIT Budget Management Architecture
 
-The fleet runs on a single premium model configuration across all agents — no model downgrades, no prompt trimming. The budget lever is frequency, not quality.
+Every agent declares one of four model-policy tiers (premium-locked, standard-locked, standard-preferred, efficient-ok); runs are weighted by tier in the burn-rate math, and no model is ever changed silently — drift detection flags any run below an agent's declared tier. Prompts are never trimmed. The budget lever is frequency first, with declared-tier model recommendations only under sustained pressure.
 
 ```
 WATCHDOG (4x/day)

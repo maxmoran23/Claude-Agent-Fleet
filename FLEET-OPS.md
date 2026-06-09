@@ -12,14 +12,17 @@ Every agent follows the same execution cycle, regardless of domain or schedule:
 STEP 0 --> STEP 1-3 ------> STEP 4 --> STEP 5 --> STEP 6 --> STEP 6.5 --> STEP 7
 Load       Gather, Analyze,  Post to    Update     Write to   Write to     Persist
 State      Rate Severity     Channel    Dashboard  Notion DB  Data Layer   State
-(canvas)   (w/fallback)                 (canvas)              (SQLite)     (canvas)
+(local     (w/fallback)                 (canvas               (SQLite)     (local file
+ file)                                   mirror)                            + mirrors)
 ```
 
+The mechanical steps of this cycle — state load, state persistence, the health footer, and the idempotency guard — are implemented as shared kernel helpers rather than per-agent prose. See [`docs/patterns/agent-kernel.md`](docs/patterns/agent-kernel.md).
+
 ### Step 0: Load State
-- Agent reads its section from the relevant state store canvas
+- Agent loads its local `state/state.json` (the authoritative inter-run memory) plus its last 3 runs from the SQLite data layer, in one kernel helper call
+- The loader returns an explicit status: `loaded`, `FIRST_RUN`, or `corrupt — treat as first_run, do not overwrite` (corruption is loud and non-destructive)
 - Retrieves: last run timestamp, prior findings, running state (e.g., portfolio positions, known enforcement actions)
-- Also queries the SQLite data layer for historical context if the analysis requires trend data
-- If state store is unavailable, agent proceeds with empty state (graceful degradation)
+- Optionally reads state store canvases for cross-agent context — that read is advisory and a failure never blocks the run
 
 ### Steps 1-3: Gather, Analyze, Rate
 - Gather data from assigned sources using fallback chains
@@ -44,7 +47,8 @@ State      Rate Severity     Channel    Dashboard  Notion DB  Data Layer   State
 - This is the permanent historical record
 
 ### Step 7: Persist State
-- Write back to state store canvas: run timestamp, key state changes, quality score, sources used
+- Write inter-run state to the local authority file (`state/state.json`) via the kernel helper: atomic write, timestamp/version stamping, 30-day history snapshot, fleet state-index update
+- Then mirror a compact snapshot to the display canvas — explicitly non-fatal; a canvas failure never loses state (see [`docs/patterns/state-management.md`](docs/patterns/state-management.md))
 - Update JIT budget state (run count, burn rate metrics)
 - This becomes Step 0 input for the next run
 
@@ -108,12 +112,29 @@ Last run: 2026-04-15T06:00:00Z
 -----------------------------------------------------------
 ```
 
-### Fleet State Store
-Centralized canvas where every agent logs:
+### Fleet State Store (display projection)
+Centralized canvas where every agent mirrors:
 - Run timestamp, sources used, fallbacks triggered
 - Quality self-rating, key state changes
 - Error conditions and recovery actions
 - JIT budget state (current level, burn rate, projections)
+
+The canvas is a human-glanceable projection, not the system of record — authoritative liveness evidence lives in each agent's local state file (tracked fleet-wide in a generated `state-index.json`) and in the SQLite run history.
+
+### Deadman Liveness Check (out-of-band)
+The watchdog catches agents that run and degrade; it cannot catch a fleet that silently stops running — including the watchdog itself. A separate deadman check runs *outside* the fleet's own scheduler chain:
+
+- For every enabled task in the schedule manifest, derive a maximum-silence window from its cron (daily → 30h, every-6h → ~9h, weekly → 8 days), plus a grace period for scheduler jitter
+- Check the freshest evidence across two independent sources: the SQLite run history and the state index
+- Alert the operator on any agent silent past its window; maintain an explicit exempt list for agents whose work product legitimately never writes run records
+
+See [`docs/patterns/generated-registry.md`](docs/patterns/generated-registry.md) for the full design.
+
+### Measured-Quality Evals
+Self-ratings measure process health as the agent perceives it. An independent eval harness scores each agent's actual published output against a weighted structural rubric (0–100), trends the scores over time, and supplies before/after evidence for upgrade experiments. See [`docs/patterns/evaluation-harness.md`](docs/patterns/evaluation-harness.md).
+
+### Generated Fleet Registry
+Fleet inventory is generated, never hand-written: a registry generator cross-joins agent directories, the schedule manifest, the live scheduler snapshot, the model policy, the run database, and the state index into a machine-readable registry plus a human index with an auto-computed drift section. It runs inside the self-repair cycle, so spec-vs-runtime drift surfaces within hours instead of waiting for an audit. See [`docs/patterns/generated-registry.md`](docs/patterns/generated-registry.md).
 
 ### Data Layer (SQLite)
 Permanent structured history:
@@ -131,17 +152,21 @@ This agent doesn't just alert on problems — it fixes them autonomously:
 
 **What it scans:**
 - All agent configuration files
-- Model specifications (must be Opus 4.6 1M)
+- Model assignments against each agent's declared model-policy tier (see below)
 - Channel routing (correct Slack channel IDs)
-- State store read/write references
+- State store read/write references and kernel version declarations
 - Required sections and formatting
+- The generated fleet registry (regenerated each cycle; its drift section becomes findings)
 
 **What it fixes:**
-- Model downgrades -> restores to Opus 4.6
 - Broken channel references -> corrects to canonical IDs
 - Missing configuration sections -> regenerates from template
 - Formatting drift -> standardizes
 - Auto-commits fixes to version control
+
+**What it flags (declared-intent drift, human decides):**
+- Model drift -> an agent ran on a model below its declared policy tier (runtime model lives in the scheduler UI, so the fix is a human action)
+- Schedule drift -> manifest vs live scheduler mismatches, including the missing-task signature of a scheduler-state wipe
 
 **What it escalates:**
 - Issues it cannot fix automatically
@@ -149,9 +174,9 @@ This agent doesn't just alert on problems — it fixes them autonomously:
 - Repeated failures of the same agent
 
 ### Fleet Evolution Engine (weekly)
-Assesses each agent against a 5-level maturity framework (L1 SCOUT → L5 MASTER). Identifies the highest-impact upgrade across the fleet and implements it autonomously, with strict one-upgrade-per-cycle discipline. Tracks each upgrade as a structured experiment with pre- and post-upgrade metrics in the data layer; evaluates outcomes after a two-week window and rolls back upgrades that didn't pay off.
+Assesses each agent against a 5-level maturity framework (L1 SCOUT → L5 MASTER). Identifies the highest-impact upgrades across the fleet and routes them through a propose-and-gate workflow: complete proposal packages (proposed file, rationale, diff) on a dedicated branch, human approval by reaction vote, then isolated one-commit applications that are trivially revertible. Tracks each applied upgrade as a structured experiment with pre- and post-upgrade metrics in the data layer; evaluates outcomes after a two-week window and rolls back upgrades that didn't pay off.
 
-See [`docs/patterns/fleet-evolution.md`](docs/patterns/fleet-evolution.md) for the level definitions, scoring criteria, and the rationale behind the bounded-cycle design.
+See [`docs/patterns/fleet-evolution.md`](docs/patterns/fleet-evolution.md) for the level definitions and scoring criteria, and [`docs/patterns/propose-and-gate.md`](docs/patterns/propose-and-gate.md) for the change-control workflow.
 
 ### Feedback Harvester (daily)
 Tracks emoji reactions on agent posts across all channels. Calculates engagement scores per agent to measure which intelligence outputs are actually valued by the operator. Feeds into the Evolution Engine's prioritization.
@@ -160,7 +185,20 @@ Tracks emoji reactions on agent posts across all channels. Calculates engagement
 
 ## JIT Budget Management
 
-Agents run on a single premium model configuration — no model downgrades, no prompt trimming. The budget lever is **frequency, never quality.**
+The budget lever is **frequency first, never silent quality loss.** Prompts are never trimmed, and a model change is never made silently — every agent declares a model-policy tier, and the budget manager works within those declarations.
+
+### Model Policy Tiers
+
+Each agent declares one of four intent tiers in a fleet-wide policy file:
+
+| Tier | Meaning | JIT run weight | Drift detection |
+|------|---------|----------------|-----------------|
+| **premium-locked** | Deep-reasoning agents that must run on the top model | 2.0 | Flagged if a run used anything else |
+| **standard-locked** | Money-on-line or compliance-critical work; standard premium model required | 1.0 | Flagged if a run used a lower tier |
+| **standard-preferred** | Premium baseline, efficient model tolerated | 1.0 | Never flagged; eligible for downgrade recommendation under YELLOW/RED |
+| **efficient-ok** | The efficient model is the intended choice | 0.2 | Never flagged |
+
+The policy file declares *intent*; the runtime model is set in the scheduler UI. Drift detection (auto-repair + generated registry) closes the loop between the two, and run-weighting feeds the burn-rate math below so a premium-locked run counts more heavily against the weekly target.
 
 ### How It Works
 
@@ -228,14 +266,15 @@ Any agent can trigger any severity level. The Smart Thread Responder cross-refer
 
 Adding a new agent to the fleet follows a repeatable process:
 
-1. Create agent directory with configuration file (fully self-contained instructions)
+1. Create agent directory with configuration file (domain logic only — declare the kernel version for the mechanical patterns)
 2. Add HTML report template (if the agent produces standalone HTML reports)
-3. Create scheduled task with appropriate cron schedule and priority tier assignment
+3. Create scheduled task with appropriate cron schedule; declare it in the schedule manifest and assign priority tier + model-policy tier
 4. Assign to Slack channel and display canvas section
-5. Add state store section for persistent memory
-6. Watchdog automatically begins monitoring on next health scan
-7. Auto-Repair automatically begins config scanning on next repair cycle
-8. Evolution Engine includes in next weekly maturity assessment
+5. Local state (`state/state.json`) initializes itself on first run via the kernel; add a display-canvas section only if human glanceability is wanted
+6. Add an eval rubric so measured-quality scoring covers the agent from day one
+7. Watchdog and deadman check automatically begin monitoring (the generated registry picks the agent up on its next build)
+8. Auto-Repair automatically begins config scanning on next repair cycle
+9. Evolution Engine includes in next weekly maturity assessment
 
 Time to deploy a new agent: typically under 1 hour from concept to production, including testing.
 
@@ -248,8 +287,9 @@ Time to deploy a new agent: typically under 1 hour from concept to production, i
 | Fleet uptime | Near-continuous since initial deployment (9+ weeks) |
 | Agents requiring manual intervention | Rare — Auto-Repair handles most issues |
 | Weekly run budget | ~800, JIT-managed |
-| Self-repair coverage | All agent configs scanned 3x/day |
-| Health monitoring frequency | 4x/day (includes budget analysis) |
-| Evolution cycle | Weekly autonomous maturity assessment + upgrade |
-| Data retention | SQLite (indefinite) + Canvas (current state) + Notion (archive) |
+| Self-repair coverage | All agent configs scanned 3x/day; registry regenerated each cycle |
+| Health monitoring frequency | 4x/day (includes budget analysis) + out-of-band deadman liveness check |
+| Evolution cycle | Weekly maturity assessment; upgrades gated on human approval, applied as revertible one-commit changes |
+| Quality measurement | Per-run self-rating + independent rubric evals (0-100) trended over time |
+| Data retention | Local state files (authority, 30-day history) + SQLite (indefinite) + Canvas (display) + Notion (archive) |
 | Mean time to new agent deployment | < 1 hour |

@@ -148,17 +148,22 @@ Full architecture documentation: **[ARCHITECTURE.md](ARCHITECTURE.md)**
 
 ## Core Patterns
 
-Eight architectural patterns form the foundation of the framework. Each has its own deep-dive documentation:
+Thirteen architectural patterns form the foundation of the framework. Each has its own deep-dive documentation:
 
 | Pattern | What It Solves |
 |---------|----------------|
-| **[State Management](docs/patterns/state-management.md)** | Two-tier state (live canvases + append-only SQLite) so agents have memory across runs AND support historical queries |
+| **[State Management](docs/patterns/state-management.md)** | One authority (local state files) + projections (canvases, SQLite) so agents have durable memory that platform limits can't silently destroy |
+| **[Agent Kernel](docs/patterns/agent-kernel.md)** | Versioned contract + shared CLI helpers replacing per-agent boilerplate — pattern improvements stop being 70-file fan-outs |
 | **[Fallback Chains](docs/patterns/fallback-chains.md)** | Graceful source degradation so no agent hard-fails and observability survives broken inputs |
 | **[Quality Self-Rating](docs/patterns/quality-self-rating.md)** | Agents self-assess 1–10 per run, giving the operator a triage signal for what to read closely |
+| **[Evaluation Harness](docs/patterns/evaluation-harness.md)** | Independent rubric scoring (0–100) of published output — drift detection and before/after evidence for upgrades |
+| **[Idempotency Outbox](docs/patterns/idempotency-outbox.md)** | Claim/confirm dedup so a retried agent never duplicates an email, post, or trade |
 | **[Execution Scaffolding](docs/patterns/execution-scaffolding.md)** | Threshold-triggered pre-filled action packages — agents do the prep, humans approve |
 | **[JIT Budget Management](docs/patterns/jit-budget-management.md)** | Autonomous throttle protocol that reduces run frequency under resource pressure (never quality) |
 | **[Self-Repair](docs/patterns/self-repair.md)** | Fleet agents scan configurations, detect drift, apply safe fixes autonomously |
-| **[Fleet Evolution](docs/patterns/fleet-evolution.md)** | Weekly autonomous maturity assessment + one-upgrade-per-cycle loop with experiment tracking |
+| **[Propose-and-Gate](docs/patterns/propose-and-gate.md)** | Human-gated self-modification — full diffs reviewed up front, one-commit rollback, an approval queue that doubles as the change-control log |
+| **[Generated Registry](docs/patterns/generated-registry.md)** | Fleet inventory generated from primary sources, never hand-written — spec-vs-runtime drift surfaces in hours, plus out-of-band deadman liveness |
+| **[Fleet Evolution](docs/patterns/fleet-evolution.md)** | Weekly maturity assessment + bounded upgrade cycles with experiment tracking |
 | **[Visual Cards](docs/patterns/visual-cards.md)** | Dynamic PNG cards embedded in Slack output for at-a-glance dense information |
 
 ---
@@ -234,13 +239,16 @@ See **[QUICKSTART.md](QUICKSTART.md)** for deploying any of these as a Claude Co
 | Decision | Choice | Why |
 |----------|--------|-----|
 | Runtime | Claude Code scheduled tasks | Always-on remote execution — no server, no laptop dependency |
-| State | Slack Canvases as persistent stores | Human-readable, agent-writable, survives restarts, no database required |
+| State | Local state files as authority; canvases as display projections | Platform write limits can degrade a dashboard but never destroy memory; canvases stay human-readable |
+| Boilerplate | Versioned kernel contract + shared CLI helpers | Pattern improvements are one-file edits; choke-point validation kills silent drift |
 | Historical data | SQLite append-only layer | Canvases are dashboards (current state); SQLite is the ledger (what was true on date X) |
 | Coupling | Zero file dependencies between agents | Any agent can fail without cascading — total fault isolation |
+| Inventory | Generated registry, never prose | Every hand-written agent count is a future lie; drift is computed, not discovered |
+| External sends | Idempotency outbox (claim/confirm) | A retry after an ambiguous failure must never duplicate an email, post, or trade |
 | Delivery | Consolidated multi-app pipeline | Slack (backbone) + digest emails + calendar (iOS push) |
-| Observability | Fleet agents, not external tools | The fleet monitors itself using the same architecture it runs on |
-| Self-repair | Autonomous, not alerting-only | Auto-Repair fixes problems, not just flags them |
-| Budget | JIT throttle protocol | Reduce run frequency, never model quality — graceful degradation under resource pressure |
+| Observability | Fleet agents + out-of-band deadman | The fleet monitors itself; one liveness check runs outside it so the monitor can't die with the monitored |
+| Self-repair | Autonomous for restore, gated for change | Auto-Repair restores declared state autonomously; *changing* declared state goes through propose-and-gate |
+| Budget | JIT throttle protocol + declared model tiers | Reduce run frequency first; model changes only within each agent's declared policy tier, never silently |
 
 ---
 
@@ -251,16 +259,19 @@ Every agent follows the same execution cycle — documented in **[FLEET-OPS.md](
 ```
 STEP 0        STEPS 1-5      STEP 6        STEP 6.5       STEP 7
 Load State -> Execute ------> Deliver ----> Write Data --> Persist State
-(canvas +     (gather,        (channels,    Layer          (write back
- data layer)   analyze,        dashboards,   (SQLite)       run log,
-               self-rate)      DB, email)                   quality score)
+(local file   (gather,        (channels,    Layer          (local file,
+ + run         analyze,        dashboards,   (SQLite)       then canvas
+ history)      self-rate)      DB, email)                   mirror)
 ```
+
+The mechanical steps (state load/persist, health footer, idempotency guard) are shared kernel helpers, not per-agent prose — see **[docs/patterns/agent-kernel.md](docs/patterns/agent-kernel.md)**.
 
 Key properties enforced across every agent:
 
 - **Fallback chains** — every source has graceful degradation
-- **Quality self-assessment** — agents rate their own output 1-10
+- **Quality self-assessment** — agents rate their own output 1-10, validated at a single choke point
 - **Health footers** — every output includes sources used, fallbacks triggered, quality score
+- **Idempotent sends** — non-idempotent actions (email, posts) pass through the claim/confirm outbox
 - **Structured data bus** — findings (severity >= MEDIUM) written to shared archive
 - **Escalation routing** — CRITICAL findings bypass normal channels, go direct to alerts
 - **JIT-aware** — agents operate within a budget-managed framework
@@ -270,7 +281,7 @@ Key properties enforced across every agent:
 ## Schemas & Reference
 
 - **[Data Layer Schema](schemas/data-layer.sql)** — SQLite DDL for the historical archive
-- **[Slack Canvas Structure](schemas/slack-canvas-structure.md)** — state-store canvas conventions
+- **[Slack Canvas Structure](schemas/slack-canvas-structure.md)** — display-canvas conventions (projection layer)
 - **[Notion Intelligence Feed](schemas/notion-intelligence-feed.md)** — archive database schema
 - **[Agent Skill Frontmatter](schemas/agent-skill-frontmatter.md)** — AGENT.md frontmatter specification
 
@@ -341,7 +352,7 @@ Claude-Agent-Fleet/
 │   └── fleet-query/                      # Advanced
 │
 ├── docs/
-│   ├── patterns/                         # 7 deep-dive pattern docs
+│   ├── patterns/                         # 13 deep-dive pattern docs
 │   ├── case-studies/                     # 4 end-to-end case studies
 │   └── examples/                         # Structural references
 │
