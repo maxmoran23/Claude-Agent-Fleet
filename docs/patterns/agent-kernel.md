@@ -173,3 +173,7 @@ What makes this safe is that progress is measured, not assumed: the generated fl
 - [Quality Self-Rating](quality-self-rating.md) — the rubric whose scale the kernel enforces
 - [Self-Repair](self-repair.md) — validates kernel declarations and flags version lag
 - [Fleet Evolution](fleet-evolution.md) — the gated path by which agents adopt the kernel
+
+---
+
+**Reference implementation:** [`fleet_core/kernel/`](../../fleet_core/kernel/) — runnable, stdlib-only library variants of the kernel helpers (state, outbox, evaluation), exercised by `tests/test_kernel.py`.

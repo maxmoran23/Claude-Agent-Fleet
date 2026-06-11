@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Agent Fleet — Showcase</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 24px;
+  }
+  .wrap { max-width: 960px; width: 100%; }
+  h1 { font-size: 1.6rem; letter-spacing: 0.02em; }
+  .sub { color: var(--muted); margin: 8px 0 36px; max-width: 70ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 24px; }
+  a.card {
+    display: block; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; text-decoration: none; color: var(--text);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  a.card img { width: 100%; display: block; border-bottom: 1px solid var(--border); }
+  .card-body { padding: 18px 20px 20px; }
+  .card-body h2 { font-size: 1.05rem; margin-bottom: 6px; }
+  .card-body p { color: var(--muted); font-size: 0.9rem; }
+  .foot { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+  .foot a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Claude Agent Fleet — Showcase</h1>
+  <p class="sub">Companion analytical dashboards from the <a href="https://github.com/maxmoran23/Claude-Agent-Fleet" style="color:var(--accent);text-decoration:none;">Claude Agent Fleet</a> repository. Static, self-contained HTML — the visual half of an agent fleet's output stack, built with the same audit-defensible, compliance-focused discipline as the agent specs.</p>
+  <div class="grid">
+    <a class="card" href="crypto-aml-typology-engine/">
+      <img src="images/crypto-aml-typology-engine.png" alt="Crypto AML Typology Engine screenshot">
+      <div class="card-body">
+        <h2>Crypto AML Typology Engine</h2>
+        <p>Fifteen crypto AML typologies with detection rules, behavioral indicators, enrichment steps, and regulatory citations.</p>
+      </div>
+    </a>
+    <a class="card" href="regulatory-intelligence-tracker/">
+      <img src="images/regulatory-intelligence-tracker.png" alt="Digital Asset Regulatory Intelligence Tracker screenshot">
+      <div class="card-body">
+        <h2>Digital Asset Regulatory Intelligence Tracker</h2>
+        <p>Filterable view of the active digital-asset regulatory landscape — legislation, rulemaking, enforcement, and guidance.</p>
+      </div>
+    </a>
+  </div>
+  <p class="foot">Both dashboards are dark-themed with a light-mode toggle. Source and positioning notes: <a href="https://github.com/maxmoran23/Claude-Agent-Fleet/tree/main/showcase">showcase/ on GitHub</a>.</p>
+</div>
+</body>
+</html>

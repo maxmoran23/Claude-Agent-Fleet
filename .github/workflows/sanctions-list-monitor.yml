@@ -1,0 +1,43 @@
+name: sanctions-list-monitor
+
+on:
+  schedule:
+    - cron: "15 22 * * *"  # 18:15 America/New_York (standard time) — after OFAC's typical publication window
+  workflow_dispatch: {}
+
+concurrency:
+  group: sanctions-list-monitor
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Restore prior snapshot state
+        uses: actions/cache/restore@v4
+        with:
+          path: agents/sanctions_list_monitor/state
+          key: sanctions-state-${{ github.run_id }}
+          restore-keys: |
+            sanctions-state-
+      - name: Run sanctions-list-monitor
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_DEFAULT_CHANNEL: ${{ secrets.SLACK_DEFAULT_CHANNEL }}
+          PYTHONPATH: .
+        run: python agents/sanctions_list_monitor/agent.py
+      - name: Save snapshot state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: agents/sanctions_list_monitor/state
+          key: sanctions-state-${{ github.run_id }}

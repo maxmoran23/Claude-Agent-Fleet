@@ -178,3 +178,7 @@ An LLM judge can assess what regexes cannot — coherence, insight, correctness 
 - [Fleet Evolution](fleet-evolution.md) — consumes eval windows for upgrade verdicts
 - [Self-Repair](self-repair.md) — score-drift escalation path
 - [State Management](state-management.md) — the data layer hosting `eval_scores`
+
+---
+
+**Reference implementation:** [`fleet_core/kernel/eval_runner.py`](../../fleet_core/kernel/eval_runner.py) — stdlib-only `score_output` with weighted predicate checks and example rubrics shipped as data.

@@ -2,7 +2,7 @@
 
 Static, single-file HTML dashboards that share the same domain focus as the agent fleet — crypto AML typologies and the digital-asset regulatory landscape. These are not produced by the agents directly. They are independent reference artifacts that illustrate the kind of analytical surface a fleet's synthesis layer would target as output.
 
-Each dashboard is a self-contained HTML file — no build step, no backend, no dependencies. Open in a browser or serve locally.
+Each dashboard is a self-contained HTML file — no build step, no backend, no dependencies. Open in a browser, serve locally, or use the live demos at **[maxmoran23.github.io/Claude-Agent-Fleet](https://maxmoran23.github.io/Claude-Agent-Fleet/)** (deployed from this directory via GitHub Pages on every push).
 
 ---
 

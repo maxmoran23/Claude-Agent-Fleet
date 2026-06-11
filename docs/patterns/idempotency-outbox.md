@@ -183,3 +183,7 @@ For those, the outbox is pure overhead — three subprocess calls and a table ro
 - [State Management](state-management.md) — the data layer that hosts `send_log`
 - [Self-Repair](self-repair.md) — the retry behavior that makes the outbox necessary
 - [Execution Scaffolding](execution-scaffolding.md) — action packages are prime outbox candidates (a duplicate bet slip is a double-stake risk)
+
+---
+
+**Reference implementation:** [`fleet_core/kernel/outbox.py`](../../fleet_core/kernel/outbox.py) — stdlib-only `claim` / `confirm` / `fail` protocol, JSON-file-backed, including the stale-claim recovery window.

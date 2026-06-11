@@ -186,3 +186,7 @@ A previous revision of this document described a two-tier model with canvases as
 - [Fallback Chains](fallback-chains.md) — what an agent does when a projection or context read is unavailable
 - [Self-Repair](self-repair.md) — how state-store drift gets caught and fixed
 - [Quality Self-Rating](quality-self-rating.md) — the quality_score field persisted to state and the data layer
+
+---
+
+**Reference implementation:** [`fleet_core/kernel/state.py`](../../fleet_core/kernel/state.py) — stdlib-only `load_state` / `persist_state` pair implementing the authority tier: explicit load status, corruption quarantine, atomic writes, history ring.

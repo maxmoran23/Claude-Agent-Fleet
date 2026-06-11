@@ -205,3 +205,114 @@ def test_synthesis_engine_main_posts_to_slack(mock_anthropic, mock_webclient, mo
     posted = slack.chat_postMessage.call_args.kwargs["text"]
     assert "Fleet Synthesis" in posted
     assert "synthesis body" in posted
+
+
+# --- Sanctions List Monitor ---------------------------------------------------
+
+SDN_CSV_V1 = (
+    '1001,"ALPHA TRADING CO.","-0- ","SDGT",-0-,-0-,-0-,-0-,-0-,-0-,-0-,-0-\n'
+    '1002,"BRAVO, Carlos","individual","CYBER2",-0-,-0-,-0-,-0-,-0-,-0-,-0-,-0-\n'
+)
+
+SDN_CSV_V2 = (
+    '1001,"ALPHA TRADING CO.","-0- ","SDGT",-0-,-0-,-0-,-0-,-0-,-0-,-0-,'
+    '"Digital Currency Address - XBT 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa."\n'
+    '1003,"CHARLIE EXCHANGE LLC","-0- ","DPRK3] [CYBER2",-0-,-0-,-0-,-0-,-0-,-0-,-0-,-0-\n'
+)
+
+
+@pytest.fixture
+def sanctions_state_path(tmp_path, monkeypatch):
+    """Redirect the monitor's state file into a temp directory."""
+    path = tmp_path / "state" / "last-run.json"
+    monkeypatch.setattr("agents.sanctions_list_monitor.agent.STATE_PATH", path)
+    return path
+
+
+def test_sanctions_list_monitor_prompt_file_exists():
+    assert (REPO_ROOT / "agents" / "sanctions_list_monitor" / "prompt.md").is_file()
+
+
+@patch("fleet_core.publisher.WebClient")
+@patch("agents.sanctions_list_monitor.agent.fetch_sdn_csv")
+def test_sanctions_monitor_baseline_run(mock_fetch, mock_webclient, mock_env, sanctions_state_path):
+    mock_fetch.return_value = SDN_CSV_V1
+    slack = MagicMock()
+    slack.chat_postMessage.return_value = {"ts": "1.2", "ok": True}
+    mock_webclient.return_value = slack
+
+    from agents.sanctions_list_monitor.agent import main as sanctions_main
+
+    assert sanctions_main() == 0
+    posted = slack.chat_postMessage.call_args.kwargs["text"]
+    assert "Baseline established" in posted
+    state = json.loads(sanctions_state_path.read_text())
+    assert state["list_snapshots"]["ofac_sdn"]["entry_count"] == 2
+    assert set(state["entries"]) == {"1001", "1002"}
+
+
+@patch("fleet_core.publisher.WebClient")
+@patch("fleet_core.runner.Anthropic")
+@patch("agents.sanctions_list_monitor.agent.fetch_sdn_csv")
+def test_sanctions_monitor_delta_posts_to_slack(
+    mock_fetch, mock_anthropic, mock_webclient, mock_env, sanctions_state_path
+):
+    mock_anthropic.return_value.messages.create.return_value = MagicMock(
+        content=[MagicMock(type="text", text="delta briefing body")],
+        usage=MagicMock(input_tokens=1, output_tokens=2),
+        stop_reason="end_turn",
+        model="claude-opus-4-6",
+    )
+    slack = MagicMock()
+    slack.chat_postMessage.return_value = {"ts": "1.2", "ok": True}
+    mock_webclient.return_value = slack
+
+    from agents.sanctions_list_monitor.agent import main as sanctions_main
+
+    mock_fetch.return_value = SDN_CSV_V1
+    assert sanctions_main() == 0  # baseline
+    mock_fetch.return_value = SDN_CSV_V2
+    assert sanctions_main() == 0  # delta
+
+    posted = slack.chat_postMessage.call_args.kwargs["text"]
+    assert "Sanctions List Monitor" in posted
+    assert "delta briefing body" in posted
+    state = json.loads(sanctions_state_path.read_text())
+    assert state["last_delta"] == {"added": 1, "removed": 1, "modified": 1}
+    assert set(state["entries"]) == {"1001", "1003"}
+
+
+@patch("fleet_core.publisher.WebClient")
+@patch("agents.sanctions_list_monitor.agent.fetch_sdn_csv")
+def test_sanctions_monitor_no_change_run(mock_fetch, mock_webclient, mock_env, sanctions_state_path):
+    mock_fetch.return_value = SDN_CSV_V1
+    slack = MagicMock()
+    slack.chat_postMessage.return_value = {"ts": "1.2", "ok": True}
+    mock_webclient.return_value = slack
+
+    from agents.sanctions_list_monitor.agent import main as sanctions_main
+
+    assert sanctions_main() == 0  # baseline
+    assert sanctions_main() == 0  # identical content
+    posted = slack.chat_postMessage.call_args.kwargs["text"]
+    assert "No changes" in posted
+
+
+@patch("fleet_core.publisher.WebClient")
+@patch("agents.sanctions_list_monitor.agent.fetch_sdn_csv")
+def test_sanctions_monitor_degraded_on_fetch_failure(
+    mock_fetch, mock_webclient, mock_env, sanctions_state_path
+):
+    import urllib.error
+
+    mock_fetch.side_effect = urllib.error.URLError("connection refused")
+    slack = MagicMock()
+    slack.chat_postMessage.return_value = {"ts": "1.2", "ok": True}
+    mock_webclient.return_value = slack
+
+    from agents.sanctions_list_monitor.agent import main as sanctions_main
+
+    assert sanctions_main() == 0
+    posted = slack.chat_postMessage.call_args.kwargs["text"]
+    assert "DEGRADED RUN" in posted
+    assert not sanctions_state_path.exists()  # prior snapshot untouched

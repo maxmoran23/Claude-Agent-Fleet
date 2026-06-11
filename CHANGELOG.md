@@ -12,6 +12,19 @@ Framework continues to evolve. See commit history for in-progress changes.
 
 ---
 
+## [1.5.0] — 2026-06-10
+
+Runnable-proof release: a sixth runnable reference agent, runnable implementations of the kernel patterns, structural CI enforcement for example specs, and live GitHub Pages demos for the showcase dashboards.
+
+### Added
+
+- `agents/sanctions_list_monitor/` — sixth runnable Python reference agent: downloads the public OFAC SDN list daily, diffs against the prior snapshot (pure, unit-tested delta functions), classifies additions/removals/modifications by program and severity via the Messages API, publishes to Slack, and persists the snapshot (GitHub Actions cache carries state between CI runs). Cheap-day path: no API call when the list is unchanged.
+- `fleet_core/kernel/` — stdlib-only reference implementations of the v1.3.0 pattern docs: `state.py` (Step 0/7 atomic load/persist, corruption quarantine, 30-run history ring), `outbox.py` (claim/confirm/fail idempotency protocol), `eval_runner.py` (0–100 weighted rubric scoring with example rubrics). Each pattern doc now links to its reference implementation.
+- `tests/test_examples.py` — structural lint for all 22 example specs: frontmatter, required step headings, section ordering, no emoji, no banned terminology, no real workspace identifiers. Test suite grows from 23 to 264.
+- `.github/workflows/pages.yml` + `showcase/index.html` — showcase dashboards deployed to GitHub Pages with a landing page; live demos linked from the README.
+
+---
+
 ## [1.4.0] — 2026-06-10
 
 Compliance-operations expansion: a dedicated tier of example agent specs covering the second-line and assurance side of a compliance program at a financial institution, plus a professional-naming pass on two existing examples. Examples grow from 15 to 22.

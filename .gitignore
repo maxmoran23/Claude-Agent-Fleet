@@ -29,3 +29,6 @@ build/
 *.sqlite
 *.db
 *.log
+
+# Agent runtime state (regenerated each run; carried in CI via Actions cache)
+agents/sanctions_list_monitor/state/

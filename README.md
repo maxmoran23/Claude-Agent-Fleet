@@ -20,7 +20,7 @@ This repository documents the architecture, design decisions, and operational pa
 
 ## Running the Reference Agents
 
-Five agents ship as runnable Python modules backed by the Anthropic Messages API, with GitHub Actions workflows for scheduled execution.
+Six agents ship as runnable Python modules backed by the Anthropic Messages API, with GitHub Actions workflows for scheduled execution.
 
 | Agent | Schedule | Output |
 |-------|----------|--------|
@@ -29,6 +29,7 @@ Five agents ship as runnable Python modules backed by the Anthropic Messages API
 | [`regulatory_oracle`](agents/regulatory_oracle/) | Daily 12:00 UTC | Digital-asset and AML/CFT regulatory briefing |
 | [`fleet_watchdog`](agents/fleet_watchdog/) | Every 6h | Fleet health report from GitHub Actions run history |
 | [`synthesis_engine`](agents/synthesis_engine/) | Daily 01:00 UTC | Meta-analysis across sibling agents' runs — themes, contradictions, gaps |
+| [`sanctions_list_monitor`](agents/sanctions_list_monitor/) | Daily 22:15 UTC | OFAC SDN list delta — additions/removals/modifications, severity-classified |
 
 ### Local
 
@@ -185,6 +186,8 @@ End-to-end walkthroughs showing what the framework actually delivers:
 
 Static, single-file HTML dashboards that share the same domain focus as the agent fleet. Independent reference artifacts illustrating the visual half of the output stack — text intelligence from agents in `agents/`, visual surfaces for the operator in `showcase/`.
 
+**Live demos:** [maxmoran23.github.io/Claude-Agent-Fleet](https://maxmoran23.github.io/Claude-Agent-Fleet/) — both dashboards served via GitHub Pages, no clone required.
+
 | Dashboard | What It Is |
 |-----------|------------|
 | **[Crypto AML Typology Engine](showcase/crypto-aml-typology-engine/)** | Reference library of 15 crypto AML typologies — sanctions evasion, money laundering, fraud — with detection rules and regulatory citations |
@@ -321,14 +324,19 @@ Claude-Agent-Fleet/
 ├── fleet_core/                           # Shared library used by all runnable agents
 │   ├── config.py                         # Environment-backed config loader
 │   ├── runner.py                         # Anthropic Messages API wrapper
-│   └── publisher.py                      # Slack publishing helper
+│   ├── publisher.py                      # Slack publishing helper
+│   └── kernel/                           # Reference implementations of the kernel patterns
+│       ├── state.py                      # Step 0/7 — atomic state load/persist, corruption quarantine
+│       ├── outbox.py                     # Idempotency outbox — claim/confirm/fail protocol
+│       └── eval_runner.py                # Evaluation harness — 0-100 rubric scoring
 │
 ├── agents/                               # Runnable Python reference agents
 │   ├── research_digest/                  # Daily AI/ML research synthesis
 │   ├── market_monitor/                   # Crypto market snapshot + narrative
 │   ├── regulatory_oracle/                # Daily digital-asset + AML/CFT briefing
 │   ├── fleet_watchdog/                   # Fleet health via GH Actions run history
-│   └── synthesis_engine/                 # Meta-analysis across sibling agents
+│   ├── synthesis_engine/                 # Meta-analysis across sibling agents
+│   └── sanctions_list_monitor/           # Daily OFAC SDN list delta, severity-classified
 │
 ├── showcase/                             # Companion analytical dashboards
 │   ├── README.md                         # Positioning, audience, how to view
@@ -336,14 +344,14 @@ Claude-Agent-Fleet/
 │   ├── crypto-aml-typology-engine/       # 15-typology AML reference library
 │   └── regulatory-intelligence-tracker/  # Digital-asset regulatory landscape
 │
-├── tests/                                # 23 unit + integration tests
+├── tests/                                # 264 unit + integration tests (incl. examples lint)
 │   ├── test_config.py
 │   ├── test_runner.py
 │   ├── test_publisher.py
 │   └── test_agents.py
 │
 ├── .github/
-│   ├── workflows/                        # ci.yml + 5 scheduled agent workflows
+│   ├── workflows/                        # ci.yml, pages.yml + 6 scheduled agent workflows
 │   ├── ISSUE_TEMPLATE/                   # Bug and feature templates
 │   ├── pull_request_template.md
 │   └── dependabot.yml                    # Weekly pip + actions updates
