@@ -774,7 +774,7 @@
                     "INITIAL TRIAGE: Identify counterparty exchange/OTC desk location (business registration, regulatory filings); confirm sanctions status of jurisdiction; verify customer's stated residence vs. IP geolocation; check for VPN/proxy indicators",
                     "ENRICHMENT: Query exchange against OFAC/FinCEN database for prior enforcement actions; pull customer KYC documentation to assess stated vs. actual jurisdiction; correlate IP geolocation with login patterns over time; check if customer funds sourced from legitimate employer or business in home country",
                     "ATTRIBUTION: Determine if customer has legitimate business reason to use jurisdiction (e.g., tech developer with Russian employer); verify no connections to designated entities or front companies; assess transaction velocity and amounts for evasion pattern vs. normal trade activity",
-                    "DISPOSITION: If high-risk exchange (no AML program) and customer lacks legitimate nexus, escalate to SAR; require EDD if borderline (attestation letters, business documentation); block further deposits if pattern matches known sanctions evasion scheme"
+                    "DISPOSITION: If high-risk exchange (no AML program) and customer lacks legitimate nexus, escalate to SAR; require heightened due diligence if borderline (attestation letters, business documentation); block further deposits if pattern matches known sanctions evasion scheme"
                 ],
                 regulatory: [
                     "31 CFR Part 501 (OFAC Sanctions Regulations) – Russia, DPRK, Iran Country Sanctions Programs",
@@ -872,7 +872,7 @@
                         rule: "IF bridge_tx_count(customer, time_window=7_days) >= 3 AND bridge_chain_sequence NOT in_defi_basket_strategy THEN flag_high_chain_fragmentation",
                         threshold: "3+ distinct chain hops in 7 days",
                         dataReq: "Cross-chain bridge transaction log, DeFi protocol classification",
-                        mitigation: "Whitelist legitimate DeFi multi-chain strategies (yield farming, liquidity provision across chains); require EDD if pattern matches evasion profile"
+                        mitigation: "Whitelist legitimate DeFi multi-chain strategies (yield farming, liquidity provision across chains); require heightened due diligence if pattern matches evasion profile"
                     },
                     {
                         rule: "IF bridge_destination_chain_liquidity_score < 0.4 AND bridge_frequency > 1_per_week THEN escalate_low_aml_arbitrage",
@@ -996,7 +996,7 @@
                     "INITIAL TRIAGE: Identify source of funds converted to privacy coin (previous deposit, prior wallet); verify conversion route (DEX, atomic swap, exchange); confirm XMR/ZEC addresses are non-exchange (non-custodial); check if conversion is one-time or repeated pattern",
                     "ENRICHMENT: Research customer's baseline asset preferences (is privacy coin consistent with profile?); check if conversion precedes risky deposit or suspicious activity (temporal pattern); query privacy coin address for further activity (if traceability allows); verify no documented business need (e.g., privacy coin research, mining)",
                     "ATTRIBUTION: Assess customer's technical sophistication (privacy coin requires additional effort); determine if conversion indicates money-laundering intent or legitimate privacy preference; review customer risk profile for prior red flags; check for nexus to known-illicit privacy coin use (ransomware, darknet, etc.)",
-                    "DISPOSITION: If conversion by low-sophistication customer post-suspicious deposit, file SAR for obfuscation intent; if customer privacy coin profile baseline or amount < $1k, monitor without escalation; require EDD if borderline (attestation letter explaining privacy coin use)"
+                    "DISPOSITION: If conversion by low-sophistication customer post-suspicious deposit, file SAR for obfuscation intent; if customer privacy coin profile baseline or amount < $1k, monitor without escalation; require heightened due diligence if borderline (attestation letter explaining privacy coin use)"
                 ],
                 regulatory: [
                     "FinCEN Guidance on Privacy-Enhancing Cryptocurrencies (Feb 2021) – XMR, ZEC as high-risk AML assets",
@@ -1038,7 +1038,7 @@
                         rule: "IF defi_interaction_count >= 4 AND time_window < 24_hours AND customer_baseline NOT in_defi_user THEN flag_medium_layering_activity",
                         threshold: "4+ DeFi interactions in 24 hours by non-DeFi-baseline customer",
                         dataReq: "DeFi protocol transaction log, customer baseline classification",
-                        mitigation: "Whitelist known DeFi developers and power users; exclude legitimate yield-chasing strategies; require EDD for medium-risk accounts"
+                        mitigation: "Whitelist known DeFi developers and power users; exclude legitimate yield-chasing strategies; require heightened due diligence for medium-risk accounts"
                     },
                     {
                         rule: "IF defi_cycle_profit < min_economic_return AND defi_gas_fees > profit_generated THEN escalate_non_economic_layering",
@@ -1148,7 +1148,7 @@
                         rule: "IF transfer_to_unverified_wallet_count >= 5 AND otc_desk_suspected AND customer_kyc_missing_for_counterparties THEN flag_high_p2p_aml_evasion",
                         threshold: "5+ transfers to unverified addresses",
                         dataReq: "Wallet cluster analysis, known OTC desk address registry",
-                        mitigation: "Exclude peer-to-peer transactions with documented counterparties (friends/family); require EDD if counterparty is unknown"
+                        mitigation: "Exclude peer-to-peer transactions with documented counterparties (friends/family); require heightened due diligence if counterparty is unknown"
                     },
                     {
                         rule: "IF transfer_to_otc_desk_frequency > 1_per_week AND cumulative_volume > threshold THEN escalate_structured_p2p_activity",
