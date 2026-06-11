@@ -20,7 +20,7 @@ Typical triggers:
 - Regulatory Oracle surfaces a HIGH or CRITICAL regulatory event
 - On-Chain Watchlist detects a CRITICAL sanctions hit
 - Market Monitor flags a CRITICAL market event
-- Alpha Lab detects a HIGH exploit or DRAINING protocol
+- DeFi Protocol Monitor detects a HIGH exploit or DRAINING protocol
 - Synthesis Engine produces a HIGH contradiction or coverage gap
 - Any agent produces a finding that requires cross-agent awareness
 

@@ -71,7 +71,7 @@ In `SYSTEM-INDEX.md`, the DRIFT section renders as findings, not prose:
 ## DRIFT (computed 2026-05-13T11:02Z)
 
 HIGH    model-drift          regulatory-oracle   ran on efficient model; policy declares standard-locked
-HIGH    manifest-not-live    headline-flash      enabled in manifest, absent from scheduler snapshot
+HIGH    manifest-not-live    breaking-news-monitor      enabled in manifest, absent from scheduler snapshot
 MEDIUM  cron-diff            daily-brief         manifest 0 7 * * *, live 0 8 * * *
 LOW     kernel-lag           onchain-watchlist   definition at kernel v1.2, current v2.0
 

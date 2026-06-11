@@ -25,7 +25,7 @@ Detected: New SEC guidance on token classification published Friday afternoon (U
 ### 3. On-Chain Watchlist (ran at 6:15 AM)
 Detected: Routine activity across all 18 monitored addresses; one notable inflow on a CEX-custody address. No sanctions hits. Severity: MEDIUM (single notable event). Quality: 8/10.
 
-### 4. Alpha Lab (ran at 4:00 AM)
+### 4. DeFi Protocol Monitor (ran at 4:00 AM)
 Detected: Major DeFi protocol announced governance proposal for fee structure change; TVL shifted -3% in response; no exploit activity fleet-wide. Severity: MEDIUM. Quality: 8/10.
 
 ### 5. Calendar Alerts (ran at 6:30 AM)
@@ -101,7 +101,7 @@ announcing stated positions ahead of the markup; expect more announcements throu
 ### DeFi Governance Repricing
 Major protocol governance proposal on fee structure announced overnight. TVL shifted -3%
 in response. The pattern is visible in peer-protocol flows: capital is testing positions
-rather than committing ahead of regulatory clarity. Watch Alpha Lab for follow-up as
+rather than committing ahead of regulatory clarity. Watch DeFi Protocol Monitor for follow-up as
 protocols respond to the governance cascade.
 
 ## Markets

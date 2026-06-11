@@ -20,7 +20,7 @@ Fifteen fully functional example agents are available. Start with one that match
 | Agent | What It Does | No Dependencies Required |
 |-------|-------------|--------------------------|
 | [Research Digest](examples/research-digest/AGENT.md) | Daily research briefing on a configurable topic | ✓ |
-| [Headline Flash](examples/headline-flash/AGENT.md) | Real-time intelligence drops on a configurable domain | ✓ |
+| [Breaking News Monitor](examples/breaking-news-monitor/AGENT.md) | Real-time intelligence drops on a configurable domain | ✓ |
 | [Market Pulse](examples/market-pulse/AGENT.md) | Lightweight crypto market snapshot | ✓ |
 
 ### Intermediate (for your second or third agent)
@@ -40,7 +40,7 @@ Fifteen fully functional example agents are available. Start with one that match
 | [Fleet Watchdog](examples/fleet-watchdog/AGENT.md) | Monitors the health of other agents | Other agents to monitor |
 | [On-Chain Watchlist](examples/onchain-watchlist/AGENT.md) | Address monitoring with sanctions screening | Chain explorer MCP, sanctions source |
 | [Synthesis Engine](examples/synthesis-engine/AGENT.md) | Cross-fleet meta-analysis | Multiple upstream agents |
-| [Alpha Lab](examples/alpha-lab/AGENT.md) | DeFi protocol risk monitoring | DeFi data source (DefiLlama, etc.) |
+| [DeFi Protocol Monitor](examples/defi-protocol-monitor/AGENT.md) | DeFi protocol risk monitoring | DeFi data source (DefiLlama, etc.) |
 | [Execution Scaffold](examples/execution-scaffold/AGENT.md) | Threshold-triggered action packages | Upstream intelligence agents |
 | [Fleet Auto-Repair](examples/fleet-auto-repair/AGENT.md) | Autonomous fleet configuration healing | Multiple agents in a fleet root |
 | [Fleet Query](examples/fleet-query/AGENT.md) | Conversational interface over the fleet | Mature fleet with populated state stores |

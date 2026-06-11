@@ -14,7 +14,7 @@ A reference architecture for operating multiple autonomous agents as a cohesive 
 
 Every agent is a structured natural language prompt executed on a schedule. Agents gather live data from external sources, maintain persistent memory across runs via Slack Canvases and a SQLite data layer, rate their own output quality, and — when something breaks — repair themselves without human intervention. A JIT budget manager monitors fleet-wide token consumption and autonomously throttles agent frequencies as resource limits approach, preserving output quality by reducing run count rather than degrading the model or prompt depth.
 
-This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Fifteen additional agent specs are included in `examples/` as prompt-only references, and companion analytical dashboards in [`showcase/`](showcase/) illustrate the visual half of the output stack.
+This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Twenty-two additional agent specs are included in `examples/` as prompt-only references — including a dedicated compliance-operations tier (control testing, risk register maintenance, sanctions-list monitoring, model governance, committee reporting, examination response) — and companion analytical dashboards in [`showcase/`](showcase/) illustrate the visual half of the output stack.
 
 ---
 
@@ -198,14 +198,14 @@ See **[showcase/README.md](showcase/README.md)** for context, audience, and how 
 
 ## Example Agents
 
-Fifteen fully functional example agents, organized by complexity. Each includes a complete `AGENT.md` with the full production pattern — state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence.
+Twenty-two fully specified example agents, organized by complexity and domain. Each includes a complete `AGENT.md` with the full production pattern — state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence.
 
 ### Entry-level (demonstrates the basic production pattern)
 
 | Agent | Domain | Demonstrates |
 |-------|--------|-------------|
 | [Research Digest](examples/research-digest/AGENT.md) | AI/ML research | Structured prompt + severity-rated findings |
-| [Headline Flash](examples/headline-flash/AGENT.md) | Breaking news | Real-time intelligence drops, Twitter-style brevity |
+| [Breaking News Monitor](examples/breaking-news-monitor/AGENT.md) | Breaking news | Real-time intelligence drops, Twitter-style brevity |
 | [Market Pulse](examples/market-pulse/AGENT.md) | Crypto markets | Multi-source data aggregation, snapshot pattern |
 
 ### Intermediate (state management, multi-source, consolidation)
@@ -225,10 +225,24 @@ Fifteen fully functional example agents, organized by complexity. Each includes 
 | [Fleet Watchdog](examples/fleet-watchdog/AGENT.md) | Fleet ops | Fleet self-monitoring, missed-run detection |
 | [On-Chain Watchlist](examples/onchain-watchlist/AGENT.md) | Blockchain compliance | Address monitoring, sanctions screening, typology flagging |
 | [Synthesis Engine](examples/synthesis-engine/AGENT.md) | Cross-agent meta | Cross-cutting theme detection, contradiction flagging |
-| [Alpha Lab](examples/alpha-lab/AGENT.md) | DeFi analytics | Protocol risk monitoring, TVL shift detection |
+| [DeFi Protocol Monitor](examples/defi-protocol-monitor/AGENT.md) | DeFi analytics | Protocol risk monitoring, TVL shift detection |
 | [Execution Scaffold](examples/execution-scaffold/AGENT.md) | Human-in-loop | Threshold-triggered action packages, reaction schema |
 | [Fleet Auto-Repair](examples/fleet-auto-repair/AGENT.md) | Fleet ops | Autonomous self-healing, config scanning |
 | [Fleet Query](examples/fleet-query/AGENT.md) | Conversational | Multi-source retrieval, data-cited answers |
+
+### Compliance operations (institutional assurance patterns)
+
+Agent specs for the second-line and assurance side of a compliance program at a financial institution — the same production pattern applied to controls, governance, and regulatory response.
+
+| Agent | Domain | Demonstrates |
+|-------|--------|-------------|
+| [Sanctions List Monitor](examples/sanctions-list-monitor/AGENT.md) | Sanctions compliance | Daily list-delta detection, program classification, same-day escalation |
+| [Control Testing](examples/control-testing/AGENT.md) | Internal controls | Workpaper-grade test execution, exception tracking, remediation re-tests |
+| [Risk Register Keeper](examples/risk-register-keeper/AGENT.md) | Risk management | Living risk register, inherent/residual re-scoring, appetite breaches |
+| [Model Governance Monitor](examples/model-governance-monitor/AGENT.md) | Model & AI governance | Model inventory, validation calendar, drift and override-rate signals |
+| [Committee Pack Assembler](examples/committee-pack-assembler/AGENT.md) | Governance reporting | KPI/KRI aggregation, escalations, prior-action tracking |
+| [Exam Response Coordinator](examples/exam-response-coordinator/AGENT.md) | Regulatory response | Request register, evidence mapping, pre-submission QC |
+| [Compliance Intelligence Hub](examples/compliance-intelligence-hub/AGENT.md) | Cross-agent aggregation | Composite pressure index, jurisdiction tiering, consolidated reporting |
 
 See **[QUICKSTART.md](QUICKSTART.md)** for deploying any of these as a Claude Code scheduled task.
 
@@ -334,9 +348,9 @@ Claude-Agent-Fleet/
 │   ├── pull_request_template.md
 │   └── dependabot.yml                    # Weekly pip + actions updates
 │
-├── examples/                             # 15 prompt-only agent specs (AGENT.md format)
+├── examples/                             # 22 prompt-only agent specs (AGENT.md format)
 │   ├── research-digest/                  # Entry-level
-│   ├── headline-flash/                   # Entry-level
+│   ├── breaking-news-monitor/            # Entry-level
 │   ├── market-pulse/                     # Entry-level
 │   ├── market-monitor/                   # Intermediate
 │   ├── regulatory-oracle/                # Intermediate
@@ -346,10 +360,17 @@ Claude-Agent-Fleet/
 │   ├── fleet-watchdog/                   # Advanced
 │   ├── onchain-watchlist/                # Advanced
 │   ├── synthesis-engine/                 # Advanced
-│   ├── alpha-lab/                        # Advanced
+│   ├── defi-protocol-monitor/            # Advanced
 │   ├── execution-scaffold/               # Advanced
 │   ├── fleet-auto-repair/                # Advanced
-│   └── fleet-query/                      # Advanced
+│   ├── fleet-query/                      # Advanced
+│   ├── sanctions-list-monitor/           # Compliance operations
+│   ├── control-testing/                  # Compliance operations
+│   ├── risk-register-keeper/             # Compliance operations
+│   ├── model-governance-monitor/         # Compliance operations
+│   ├── committee-pack-assembler/         # Compliance operations
+│   ├── exam-response-coordinator/        # Compliance operations
+│   └── compliance-intelligence-hub/      # Compliance operations
 │
 ├── docs/
 │   ├── patterns/                         # 13 deep-dive pattern docs

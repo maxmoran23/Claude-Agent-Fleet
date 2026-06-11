@@ -12,6 +12,27 @@ Framework continues to evolve. See commit history for in-progress changes.
 
 ---
 
+## [1.4.0] — 2026-06-10
+
+Compliance-operations expansion: a dedicated tier of example agent specs covering the second-line and assurance side of a compliance program at a financial institution, plus a professional-naming pass on two existing examples. Examples grow from 15 to 22.
+
+### Added
+
+- `examples/sanctions-list-monitor/` — daily sanctions-list delta agent: diffs current OFAC SDN / consolidated list publications against the prior stored snapshot, classifies additions/removals/modifications by program, escalates same-day designations.
+- `examples/control-testing/` — independent control-testing agent: executes test procedures against sampled evidence, produces workpaper-style results with exceptions by severity, tracks remediation re-tests across runs.
+- `examples/risk-register-keeper/` — maintains a living compliance risk register: re-scores inherent/residual ratings as findings arrive, flags appetite breaches, produces period delta reports.
+- `examples/model-governance-monitor/` — monitors models, rule sets, and AI-assisted tools in production processes: inventory, validation calendar, performance-drift and override-rate signals, human-in-the-loop control health.
+- `examples/committee-pack-assembler/` — assembles governance committee reporting packs from sibling-agent state: KPI/KRI metrics, escalations, prior-action status, decisions-sought vs items for noting.
+- `examples/exam-response-coordinator/` — on-demand examination/information-request coordinator: request register with owners and due dates, evidence mapping, open-item tracking, pre-submission completeness QC.
+- `examples/compliance-intelligence-hub/` — aggregator across regulatory, sanctions, and on-chain monitoring agents: composite Compliance Pressure Index (0–100), jurisdiction tiering, consolidated dashboard-style report.
+
+### Changed
+
+- `examples/alpha-lab/` renamed to `examples/defi-protocol-monitor/` and `examples/headline-flash/` renamed to `examples/breaking-news-monitor/` — descriptive, institution-appropriate names; all repository references updated.
+- `README.md` — new "Compliance operations" tier in the example catalog; counts and directory tree updated.
+
+---
+
 ## [1.3.0] — 2026-06-09
 
 Architecture refresh reflecting a full production re-foundation: state authority inversion, a shared agent kernel, gated self-modification, generated inventory, and independent quality measurement. Five new pattern docs; the state-management pattern rewritten.
@@ -101,7 +122,7 @@ First publicly-documented release of the framework as a reference architecture.
 ### Added
 
 - Twelve new example agents covering entry-level through advanced complexity tiers:
-  - `headline-flash` — real-time intelligence drops
+  - `breaking-news-monitor` — real-time intelligence drops
   - `market-pulse` — lightweight market snapshot
   - `regulatory-oracle` — regulatory landscape monitoring
   - `calendar-alerts` — time-sensitive deadline routing
@@ -109,7 +130,7 @@ First publicly-documented release of the framework as a reference architecture.
   - `meeting-prep` — calendar-aware context aggregation
   - `onchain-watchlist` — address monitoring with sanctions screening
   - `synthesis-engine` — meta-analyst across the fleet
-  - `alpha-lab` — DeFi protocol risk monitoring
+  - `defi-protocol-monitor` — DeFi protocol risk monitoring
   - `execution-scaffold` — threshold-triggered action packages
   - `fleet-auto-repair` — autonomous configuration self-healing
   - `fleet-query` — conversational interface over the fleet

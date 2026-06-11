@@ -26,9 +26,9 @@ Total elapsed time from regulator announcement to operator's desk: under 30 minu
 
 OFAC publishes a press release and settlement document: `EXAMPLE-SETTLEMENT-001`. The settlement identifies compliance program deficiencies and requires corrective actions within 90 days.
 
-### T+00:00 to T+10:00 — Headline Flash catches it
+### T+00:00 to T+10:00 — Breaking News Monitor catches it
 
-The Headline Flash agent's next scheduled run (every ~3 hours during active hours) picks up the announcement from its regulatory-news query. It posts to the command-center channel:
+The Breaking News Monitor agent's next scheduled run (every ~3 hours during active hours) picks up the announcement from its regulatory-news query. It posts to the command-center channel:
 
 ```
 # Flash — [DATE] [TIME]
