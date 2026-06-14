@@ -8,6 +8,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added — Slack environment layer
+
+- `schemas/slack-workspace-architecture.md` — authoritative channel taxonomy and setup guide for the fleet's Slack workspace: the `intel-*` / `#alerts` / `#fleet-ops` / `#digest` / `#ask-fleet` / `#lab` channel groups, naming conventions, the agent→channel routing matrix, threading discipline (`one-thread-per-run` vs `one-thread-per-entity`), per-channel furniture (pinned canvas, four-bookmark bar, Watchdog-rewritten health-line topic), a notification strategy that keeps `intel-*` muted so `#alerts` means something, a setup checklist, and anti-patterns.
+- `schemas/slack-block-kit-templates.md` — the visual component library for everything agents post: a fixed Block Kit block-order grammar (header → context → section/fields → image card → divider → actions → footer), copy-paste-ready payloads for Intel Report / Alert Card / Daily Digest / Fleet Status / Quality Scorecard, a fleet-wide severity color+emoji convention, interactive-element conventions (button styles, overflow menus, `action_id` patterns), and accessibility rules (alt text, never color-alone).
+- `showcase/slack-workspace/index.html` — interactive, dependency-free mockup of the whole workspace: channel sidebar with the taxonomy, realistically-styled agent posts rendering the Block Kit components, critical alert cards, a consolidated digest, interactive Q&A, and pinned state canvases in the right pane. Click between channels; dark/light toggle. Wired into the showcase landing page and README.
+
 Framework continues to evolve. See commit history for in-progress changes.
 
 ---

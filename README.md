@@ -186,10 +186,11 @@ End-to-end walkthroughs showing what the framework actually delivers:
 
 Static, single-file HTML dashboards that share the same domain focus as the agent fleet. Independent reference artifacts illustrating the visual half of the output stack — text intelligence from agents in `agents/`, visual surfaces for the operator in `showcase/`.
 
-**Live demos:** [maxmoran23.github.io/Claude-Agent-Fleet](https://maxmoran23.github.io/Claude-Agent-Fleet/) — both dashboards served via GitHub Pages, no clone required.
+**Live demos:** [maxmoran23.github.io/Claude-Agent-Fleet](https://maxmoran23.github.io/Claude-Agent-Fleet/) — all dashboards served via GitHub Pages, no clone required.
 
 | Dashboard | What It Is |
 |-----------|------------|
+| **[Fleet Slack Workspace — Interactive Mockup](showcase/slack-workspace/)** | Operator's-eye view of the fleet's Slack environment — channel taxonomy, Block Kit message components, alert cards, daily digests, and pinned canvases; click between channels, toggle dark/light |
 | **[Crypto AML Typology Engine](showcase/crypto-aml-typology-engine/)** | Reference library of 15 crypto AML typologies — sanctions evasion, money laundering, fraud — with detection rules and regulatory citations |
 | **[Digital Asset Regulatory Intelligence Tracker](showcase/regulatory-intelligence-tracker/)** | Filterable view of the active digital-asset regulatory landscape — proposed legislation, agency rulemaking, enforcement actions |
 
@@ -298,6 +299,8 @@ Key properties enforced across every agent:
 ## Schemas & Reference
 
 - **[Data Layer Schema](schemas/data-layer.sql)** — SQLite DDL for the historical archive
+- **[Slack Workspace Architecture](schemas/slack-workspace-architecture.md)** — channel taxonomy, routing matrix, threading & notification strategy
+- **[Slack Block Kit Templates](schemas/slack-block-kit-templates.md)** — visual message-component library posted into channels
 - **[Slack Canvas Structure](schemas/slack-canvas-structure.md)** — display-canvas conventions (projection layer)
 - **[Notion Intelligence Feed](schemas/notion-intelligence-feed.md)** — archive database schema
 - **[Agent Skill Frontmatter](schemas/agent-skill-frontmatter.md)** — AGENT.md frontmatter specification
@@ -385,8 +388,10 @@ Claude-Agent-Fleet/
 │   ├── case-studies/                     # 4 end-to-end case studies
 │   └── examples/                         # Structural references
 │
-└── schemas/                              # 4 schema & reference docs
+└── schemas/                              # 6 schema & reference docs
     ├── data-layer.sql
+    ├── slack-workspace-architecture.md
+    ├── slack-block-kit-templates.md
     ├── slack-canvas-structure.md
     ├── notion-intelligence-feed.md
     └── agent-skill-frontmatter.md
