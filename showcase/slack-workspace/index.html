@@ -120,7 +120,7 @@
   }
   .bm:hover { color: var(--text); border-color: var(--accent); }
 
-  .feed { overflow-y: auto; padding: 8px 0 60px; flex: 1; }
+  .feed { overflow-y: auto; padding: 8px 0 20px; flex: 1; }
   .daysep { display: flex; align-items: center; gap: 12px; margin: 14px 22px 6px; }
   .daysep::before, .daysep::after { content: ""; height: 1px; background: var(--border); flex: 1; }
   .daysep span {
@@ -240,6 +240,33 @@
   .legend { font-size: .76rem; color: var(--muted); padding: 14px 18px; border-top: 1px solid var(--border); }
   .legend b { color: var(--text); }
 
+  /* expandable thread */
+  .thread .caret { transition: transform .15s ease; display: inline-block; }
+  .thread.open { font-weight: 600; }
+  .thread.open .caret { transform: rotate(90deg); }
+  .replies { margin: 4px 0 2px 6px; border-left: 2px solid var(--border); padding-left: 14px; display: none; }
+  .replies.show { display: block; }
+  .reply { display: flex; gap: 9px; padding: 6px 0; }
+  .reply .ra { width: 26px; height: 26px; border-radius: 7px; flex: none; display: grid; place-items: center; font-size: .8rem; color: #fff; }
+  .reply .rb { min-width: 0; }
+  .reply .rhead b { font-weight: 700; font-size: .83rem; }
+  .reply .rhead .rt { color: var(--faint); font-size: .72rem; margin-left: 6px; }
+  .reply .rbody { font-size: .85rem; color: var(--text); margin-top: 1px; }
+  .reply .rbody code { font-family: var(--mono); font-size: .82em; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+
+  /* unread dot in sidebar */
+  .chan .unread { width: 7px; height: 7px; border-radius: 50%; background: #4fd18b; flex: none; }
+
+  /* composer */
+  .composer { padding: 8px 22px 14px; border-top: 1px solid var(--border); background: var(--bg); }
+  .composer .box { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); overflow: hidden; }
+  .composer .tools { display: flex; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--border); color: var(--faint); font-size: .9rem; }
+  .composer .tools span { width: 26px; height: 22px; display: grid; place-items: center; border-radius: 5px; cursor: not-allowed; }
+  .composer .field { display: flex; align-items: center; padding: 9px 12px; color: var(--faint); font-size: .9rem; }
+  .composer .send { margin-left: auto; background: var(--low-bar); color: #fff; border-radius: 6px; padding: 5px 11px; font-size: .82rem; opacity: .5; font-weight: 600; }
+  .composer .hint { font-size: .72rem; color: var(--faint); margin-top: 7px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  kbd { font-family: var(--mono); font-size: .7rem; background: var(--surface-2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--muted); }
+
   /* intro strip */
   .intro {
     padding: 14px 22px; background: linear-gradient(180deg, var(--surface), transparent);
@@ -268,6 +295,7 @@
   <section class="main">
     <header class="chan-head" id="chanHead"></header>
     <div class="feed" id="feed"></div>
+    <div class="composer" id="composer"></div>
   </section>
 
   <!-- ============ CANVAS PANE ============ -->
@@ -326,7 +354,7 @@ const CHANNELS = {
     emoji:"🛰", title:"intel-markets",
     health:{state:"🟢", text:"healthy · last run 14:02 UTC · quality 8.6 · 0 open escalations"},
     desc:"Market intelligence · Market Monitor + Market Pulse · 4×/day · canvas pinned",
-    badge:null,
+    badge:null, unread:true,
     canvas:"market",
     msgs:[
       { author:"Market Monitor", av:"market", ts:"14:02", sev:"med",
@@ -339,7 +367,11 @@ const CHANNELS = {
              alt:"Market snapshot — total cap $2.41T up 0.8%, BTC $62.4k, ETH $3.2k"},
         btns:[{t:"📌 Open Canvas"},{t:"📈 Live Dashboard"},{type:"overflow"}],
         foot:"Market Monitor · kernel v1.5 · #intel-markets · <em>reply in thread to enrich</em>",
-        react:[{e:"👀",n:2},{e:"📈",n:1}], thread:{n:3, avs:["synthesis","operator"], last:"Synthesis Engine 14:09"} },
+        react:[{e:"👀",n:2},{e:"📈",n:1}], thread:{avs:["synthesis","operator"], last:"Synthesis Engine 14:09"},
+        replies:[
+          {author:"Synthesis Engine", av:"synthesis", ts:"14:09", body:"Cross-reference: this rotation lines up with Tuesday's markup flagged in <code>#intel-regulatory</code>. Folding both into the 14:15 digest."},
+          {author:"Operator", av:"operator", ts:"14:12", body:"Good — watch the ETH-BTC ratio; ping me if it breaks the 3-month low intraday."},
+        ] },
       { author:"Market Pulse", av:"market", ts:"10:00", sev:"low",
         title:"🟢 Morning pulse — no threshold breaches",
         ctx:"<code>10:00 UTC</code> · run <code>mp-2026-0614-1000</code> · quality <b>8.2/10</b>",
@@ -364,7 +396,10 @@ const CHANNELS = {
         flds:[{k:"Instrument",v:"Interpretive guidance"},{k:"Effective",v:"On publication"},{k:"Severity",v:"HIGH"},{k:"Calendar",v:"Tue markup ✓"}],
         btns:[{t:"📌 Open Canvas"},{t:"📑 Regulatory Tracker"},{t:"📅 Add to calendar"},{type:"overflow"}],
         foot:"Regulatory Oracle · kernel v1.5 · #intel-regulatory · flagged to #digest",
-        react:[{e:"⚖️",n:2},{e:"👀",n:3}], thread:{n:2, avs:["operator"], last:"Operator 09:55"} },
+        react:[{e:"⚖️",n:2},{e:"👀",n:3}], thread:{avs:["operator"], last:"Operator 09:55"},
+        replies:[
+          {author:"Operator", av:"operator", ts:"09:55", body:"Routing the custody-rule read to compliance. Calendar event confirmed for the markup."},
+        ] },
       { author:"Model Governance Monitor", av:"regoracle", ts:"08:00", sev:"low",
         title:"🟢 Model inventory reconciled — no drift",
         ctx:"<code>08:00 UTC</code> · run <code>mg-2026-0614-0800</code> · quality <b>8.7/10</b>",
@@ -379,7 +414,7 @@ const CHANNELS = {
     emoji:"🛰", title:"intel-onchain",
     health:{state:"🟢", text:"healthy · last run 14:06 UTC · quality 8.9 · 1 open escalation"},
     desc:"On-chain intelligence · Watchlist + Sanctions + DeFi monitors · continuous · canvas pinned",
-    badge:{type:"soft", n:"1"}, canvas:"onchain",
+    badge:{type:"soft", n:"1"}, unread:true, canvas:"onchain",
     msgs:[
       { author:"Sanctions List Monitor", av:"sanctions", ts:"14:06", sev:"crit",
         title:"🔴 CRITICAL — Sanctions hit on watched address",
@@ -391,7 +426,12 @@ const CHANNELS = {
              alt:"Exposure path — 3 hops from 0xAB…01 to SDN-2026-042, 1.2M USDT"},
         btns:[{t:"🔎 Full report"},{t:"✅ Acknowledge", style:"primary"},{t:"📅 Add to calendar"},{type:"overflow"}],
         foot:"Sanctions List Monitor · kernel v1.5 · escalation: #alerts + operator DM",
-        react:[{e:"🚨",n:1},{e:"👀",n:4}], thread:{n:5, avs:["synthesis","operator","watchdog"], last:"Operator acknowledged 14:11"} },
+        react:[{e:"🚨",n:1},{e:"👀",n:4}], thread:{avs:["watchdog","synthesis","operator"], last:"Operator acknowledged 14:11"},
+        replies:[
+          {author:"Smart Thread Responder", av:"watchdog", ts:"14:07", body:"Cross-ref: <code>0xAB…01</code> is already on the flagged-counterparties list in the On-Chain Watchlist canvas (first seen 2026-04-19). Not a first contact."},
+          {author:"Synthesis Engine", av:"synthesis", ts:"14:08", body:"Escalation mirrored to <code>#alerts</code> + operator DM. Added to the AM digest top-of-mind."},
+          {author:"Operator", av:"operator", ts:"14:11", body:"Acknowledged — opening a case and freezing review on the counterparty."},
+        ] },
       { author:"On-Chain Watchlist", av:"onchain", ts:"13:30", sev:"low",
         title:"🟢 Watchlist sweep — 4 routine updates",
         ctx:"<code>13:30 UTC</code> · run <code>ow-2026-0614-1330</code> · quality <b>8.5/10</b>",
@@ -423,7 +463,7 @@ const CHANNELS = {
     emoji:"🚨", title:"alerts",
     health:{state:"🔴", text:"interrupt channel · notifies on all messages · 1 open · CRITICAL only"},
     desc:"Critical escalation only · all agents · notifies (no mute) · thin high-signal index",
-    badge:{type:"hard", n:"1"}, canvas:null,
+    badge:{type:"hard", n:"1"}, unread:true, canvas:null,
     msgs:[
       { author:"Sanctions List Monitor", av:"sanctions", ts:"14:06", sev:"crit",
         title:"🔴 CRITICAL — Sanctions hit on watched address",
@@ -461,7 +501,7 @@ const CHANNELS = {
     emoji:"📊", title:"fleet-ops",
     health:{state:"🟡", text:"operational telemetry · muted · 1 ESCALATE awaiting gate"},
     desc:"Fleet health, runs, budget · Watchdog + Auto-repair · 4×/day · canvas pinned",
-    badge:{type:"soft", n:"1"}, canvas:"fleet",
+    badge:{type:"soft", n:"1"}, unread:true, canvas:"fleet",
     msgs:[
       { author:"Fleet Watchdog", av:"watchdog", ts:"14:00", sev:"info",
         title:"🔵 Fleet Watchdog — Health & Budget",
@@ -477,7 +517,10 @@ const CHANNELS = {
         body:"<b>Auto-repair:</b> 1 open ESCALATE (DeFi Monitor — endpoint timeout, 3 consecutive failures). Proposed fix staged, awaiting operator gate.",
         btns:[{t:"✅ Approve fix", style:"primary"},{t:"👀 Review diff"},{t:"📊 Budget detail"}],
         foot:"Fleet Watchdog · kernel v1.5 · #fleet-ops · propose-and-gate",
-        react:[{e:"🐕",n:1}], thread:{n:1, avs:["operator"], last:"Operator reviewing 14:04"} },
+        react:[{e:"🐕",n:1}], thread:{avs:["operator"], last:"Operator reviewing 14:04"},
+        replies:[
+          {author:"Operator", av:"operator", ts:"14:04", body:"Reviewing the DeFi Monitor diff now before approving the repair."},
+        ] },
     ]
   },
 
@@ -558,9 +601,11 @@ function sidebarChannelRow(id, active){
   const c = CHANNELS[id];
   let badge = "";
   if (c.badge) badge = `<span class="badge ${c.badge.type==='soft'?'soft':''}">${c.badge.n}</span>`;
+  const unread = (c.unread && !active) ? `<span class="unread" title="unread activity"></span>` : "";
   const muted = ["alerts","ask-fleet"].includes(id) ? "" : `<span class="mute" title="muted by default">🔕</span>`;
+  const bold = (c.unread && !active) ? "style=\"font-weight:600;color:#fff\"" : "";
   return `<button class="chan ${active?'active':''}" data-ch="${id}">
-    <span class="hash">#</span><span class="nm">${c.title}</span>${badge}${muted}
+    <span class="hash">#</span><span class="nm" ${bold}>${c.title}</span>${unread}${badge}${muted}
   </button>`;
 }
 
@@ -617,7 +662,17 @@ function renderMsg(m){
   if (m.react) extras += `<div class="react">${m.react.map(r=>`<span class="chip">${r.e} <b>${r.n}</b></span>`).join("")}<span class="chip" style="cursor:pointer">＋</span></div>`;
   if (m.thread){
     const avs = m.thread.avs.map(av=>{const a=AVATARS[av]||AVATARS.operator;return `<span class="ava" style="background:${a.bg}">${a.ic}</span>`;}).join("");
-    extras += `<div class="thread">${avs}<span>${m.thread.n} repl${m.thread.n>1?'ies':'y'}</span><span style="color:var(--faint)">· ${m.thread.last}</span></div>`;
+    const n = m.replies ? m.replies.length : (m.thread.n || 0);
+    extras += `<div class="thread" role="button" tabindex="0"><span class="caret">▸</span>${avs}<span>${n} repl${n!==1?'ies':'y'}</span><span style="color:var(--faint)">· ${m.thread.last}</span></div>`;
+    if (m.replies){
+      const rows = m.replies.map(r=>{
+        const a = AVATARS[r.av] || AVATARS.operator;
+        return `<div class="reply"><div class="ra" style="background:${a.bg}">${a.ic}</div>
+          <div class="rb"><div class="rhead"><b>${r.author}</b><span class="rt">${r.ts}</span></div>
+          <div class="rbody">${r.body}</div></div></div>`;
+      }).join("");
+      extras += `<div class="replies">${rows}</div>`;
+    }
   }
 
   return `<div class="msg">${avatar}<div class="msg-body">${head}${card}${extras}</div></div>`;
@@ -659,6 +714,21 @@ function renderCanvas(id){
     <div class="cv-body">${body}</div>${legend()}`;
 }
 
+function renderComposer(id){
+  const c = CHANNELS[id];
+  document.getElementById("composer").innerHTML = `
+    <div class="box">
+      <div class="tools"><span title="bold">𝐁</span><span title="italic">𝑖</span><span title="link">🔗</span><span title="list">≣</span><span title="code">＜＞</span></div>
+      <div class="field">Message #${c.title}<span class="send">➤ Send</span></div>
+    </div>
+    <div class="hint">
+      <span><kbd>↑</kbd><kbd>↓</kbd> change channel</span>
+      <span><kbd>t</kbd> toggle theme</span>
+      <span>click <b>▸ replies</b> to expand a thread</span>
+      <span style="color:var(--faint)">composer is illustrative — this is a static mockup</span>
+    </div>`;
+}
+
 function legend(){
   return `<div class="legend">
     <b>Severity</b> &nbsp; 🔴 critical &nbsp; 🟠 high &nbsp; 🟡 medium &nbsp; 🟢 low &nbsp; 🔵 info<br>
@@ -667,18 +737,50 @@ function legend(){
   </div>`;
 }
 
+let current = null;
+const CHANNEL_ORDER = SIDEBAR.flatMap(g=>g.channels);
+
 function select(id){
+  current = id;
   renderSidebar(id);
   renderHead(id);
   renderFeed(id);
   renderCanvas(id);
+  renderComposer(id);
   history.replaceState(null, "", "#"+id);
 }
 
-/* theme toggle */
-document.getElementById("themeToggle").addEventListener("click", ()=>{
+function toggleTheme(){
   const b = document.body;
   b.dataset.theme = b.dataset.theme === "dark" ? "light" : "dark";
+}
+
+/* theme toggle button */
+document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+/* expandable threads (event delegation on the feed) */
+document.getElementById("feed").addEventListener("click", (e)=>{
+  const t = e.target.closest(".thread");
+  if (!t) return;
+  t.classList.toggle("open");
+  const rep = t.nextElementSibling;
+  if (rep && rep.classList.contains("replies")) rep.classList.toggle("show");
+});
+document.getElementById("feed").addEventListener("keydown", (e)=>{
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("thread")){
+    e.preventDefault(); e.target.click();
+  }
+});
+
+/* keyboard navigation between channels */
+document.addEventListener("keydown", (e)=>{
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea") return;
+  const i = CHANNEL_ORDER.indexOf(current);
+  if (e.key === "ArrowDown" || e.key === "j"){ e.preventDefault(); select(CHANNEL_ORDER[(i+1) % CHANNEL_ORDER.length]); }
+  else if (e.key === "ArrowUp" || e.key === "k"){ e.preventDefault(); select(CHANNEL_ORDER[(i-1+CHANNEL_ORDER.length) % CHANNEL_ORDER.length]); }
+  else if (e.key === "t"){ toggleTheme(); }
 });
 
 /* boot */
