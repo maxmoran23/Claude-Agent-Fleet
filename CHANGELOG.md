@@ -16,7 +16,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ### Enhanced — Slack workspace mockup
 
-- `showcase/slack-workspace/index.html` — added genuine UI/UX depth: **expandable threads** (click any thread to reveal the in-thread cross-references and operator notes that demonstrate the threading discipline), an illustrative **message composer** bar to complete the Slack layout, **keyboard navigation** (`↑`/`↓` or `j`/`k` between channels, `t` to toggle theme), and **sidebar unread markers** that reinforce the muted-by-default notification strategy.
+- `showcase/slack-workspace/index.html` — added a **Fleet Home overview** as the default landing surface: KPI strip (agents, open escalations, weekly budget, average quality), a 12-agent health-tile grid, a "needs attention" list, and a digest preview — the single-glance "is anything on fire?" view, with every tile and item click-through to its channel. Made the **composer functional** (type to post a local demo message into the feed). Plus **expandable threads** (click any thread to reveal in-thread cross-references and operator notes), **keyboard navigation** (`↑`/`↓` or `j`/`k` between channels, `t` to toggle theme), and **sidebar unread markers** that reinforce the muted-by-default notification strategy.
 - `showcase/images/slack-workspace.svg` + `showcase/index.html` — hand-crafted SVG thumbnail for the mockup so the showcase landing grid is visually consistent with the image-topped dashboards.
 - `docs/RESTORE-POINTS.md` — durable revert anchors tracked by commit SHA (the remote rejects tag pushes), starting with the Slack environment layer's initial shipped form (`fb8abd4`).
 

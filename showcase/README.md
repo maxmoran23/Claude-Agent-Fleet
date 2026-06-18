@@ -8,15 +8,19 @@ Each dashboard is a self-contained HTML file — no build step, no backend, no d
 
 ## Fleet Slack Workspace — Interactive Mockup
 
-An operator's-eye portrait of the fleet's Slack environment: the channel
-taxonomy in the sidebar (with unread markers and mute indicators), realistically-styled
-agent posts assembled from the [Block Kit component library](../schemas/slack-block-kit-templates.md),
-critical [alert cards](slack-workspace/), consolidated daily digests, interactive
-Q&A, and the pinned [state canvases](../schemas/slack-canvas-structure.md) in the
-right pane. **Interactive:** click between channels (or use <kbd>↑</kbd>/<kbd>↓</kbd>),
-expand any thread to read the in-thread cross-references and operator notes, and
-toggle dark/light (<kbd>t</kbd>) — to see how routing, threading, and severity
-coding play out across the workspace.
+An operator's-eye portrait of the fleet's Slack environment. Lands on a **Fleet
+Home** overview — fleet-wide health tiles, KPIs, a "needs attention" list, weekly
+budget, and a digest preview, answering "is anything on fire?" before you open a
+single feed. From there: the channel taxonomy in the sidebar (with unread markers
+and mute indicators), realistically-styled agent posts assembled from the
+[Block Kit component library](../schemas/slack-block-kit-templates.md), critical
+[alert cards](slack-workspace/), consolidated daily digests, interactive Q&A, and
+the pinned [state canvases](../schemas/slack-canvas-structure.md) in the right
+pane. **Interactive:** click between channels (or use <kbd>↑</kbd>/<kbd>↓</kbd>),
+click any Fleet Home tile to jump to its channel, expand a thread to read the
+in-thread cross-references and operator notes, post a demo message in the
+composer, and toggle dark/light (<kbd>t</kbd>) — to see how routing, threading,
+and severity coding play out across the workspace.
 
 - **Path:** [`slack-workspace/index.html`](slack-workspace/index.html)
 - **Audience:** Anyone evaluating how agent output should *land* — fleet operators, designers, hiring reviewers

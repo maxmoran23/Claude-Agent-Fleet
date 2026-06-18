@@ -267,6 +267,64 @@
   .composer .hint { font-size: .72rem; color: var(--faint); margin-top: 7px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   kbd { font-family: var(--mono); font-size: .7rem; background: var(--surface-2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--muted); }
 
+  /* ---------- fleet home overview ---------- */
+  .home { padding: 18px 24px 48px; overflow-y: auto; }
+  .home h2 { font-size: 1.15rem; font-weight: 800; letter-spacing: .01em; }
+  .home .lede { color: var(--muted); font-size: .86rem; margin: 4px 0 18px; max-width: 72ch; }
+  .home section { margin-top: 24px; }
+  .home section > h3 {
+    font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+    font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .home section > h3 .rule { height: 1px; background: var(--border); flex: 1; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .kpi .kn { font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
+  .kpi .kl { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+  .kpi .ks { font-size: .72rem; margin-top: 6px; }
+  .kpi.warn { border-left: 3px solid var(--med-bar); }
+  .kpi.crit { border-left: 3px solid var(--crit-bar); }
+  .kpi.ok   { border-left: 3px solid var(--low-bar); }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(208px,1fr)); gap: 10px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-left-width: 3px;
+    border-radius: 9px; padding: 11px 13px; cursor: pointer; transition: border-color .14s ease, transform .14s ease;
+  }
+  .tile:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .tile.s-green { border-left-color: var(--low-bar); }
+  .tile.s-yellow { border-left-color: var(--med-bar); }
+  .tile.s-red { border-left-color: var(--crit-bar); }
+  .tile .ta { font-weight: 700; font-size: .9rem; display: flex; align-items: center; gap: 6px; }
+  .tile .tc { font-size: .74rem; color: var(--muted); margin-top: 1px; }
+  .tile .tm { display: flex; justify-content: space-between; margin-top: 9px; font-size: .76rem; color: var(--muted); }
+  .tile .tm b { color: var(--text); }
+
+  .attn { display: flex; flex-direction: column; gap: 8px; }
+  .attn-row {
+    display: flex; gap: 11px; align-items: flex-start; background: var(--surface);
+    border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 9px; padding: 11px 14px; cursor: pointer;
+  }
+  .attn-row:hover { border-color: var(--accent); }
+  .attn-row.crit { border-left-color: var(--crit-bar); }
+  .attn-row.high { border-left-color: var(--high-bar); }
+  .attn-row.info { border-left-color: var(--info-bar); }
+  .attn-row .ae { font-size: 1.1rem; }
+  .attn-row .ab { min-width: 0; font-size: .86rem; }
+  .attn-row .ab .at { font-weight: 700; }
+  .attn-row .ab .ad { color: var(--muted); }
+  .attn-row .ach { margin-left: auto; font-size: .74rem; color: var(--accent); white-space: nowrap; }
+
+  .progress { height: 9px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--low-bar), var(--med-bar)); }
+  .home .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .home .twocol { grid-template-columns: 1fr; } }
+  .digest-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px 16px; }
+  .digest-mini .dr { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: .85rem; }
+  .digest-mini .dr:last-child { border-bottom: none; }
+  .digest-mini .dr b { font-weight: 700; }
+
   /* intro strip */
   .intro {
     padding: 14px 22px; background: linear-gradient(180deg, var(--surface), transparent);
@@ -596,6 +654,42 @@ const CANVASES = {
   },
 };
 
+/* ============ FLEET HOME (aggregate overview) ============ */
+const HOME = {
+  kpis: [
+    { n:"12", l:"Agents in fleet", s:"🟢 9 healthy · 🟡 2 degraded · 🔴 1 down", cls:"ok" },
+    { n:"1", l:"Open escalations", s:"1 CRITICAL acknowledged · 0 unack", cls:"crit" },
+    { n:"68%", l:"Weekly budget", s:"day 6 / 7 · on target · JIT NORMAL", cls:"ok", bar:68 },
+    { n:"8.4", l:"Avg quality (10-run)", s:"trend stable→up · 9 8 9 8 9 7 8 9 8 9", cls:"warn" },
+  ],
+  tiles: [
+    { agent:"Market Monitor",      av:"market",    ch:"intel-markets",    s:"green",  q:"8.6", last:"14:02" },
+    { agent:"Market Pulse",        av:"market",    ch:"intel-markets",    s:"green",  q:"8.2", last:"10:00" },
+    { agent:"Regulatory Oracle",   av:"regoracle", ch:"intel-regulatory", s:"green",  q:"9.1", last:"09:40" },
+    { agent:"Model Governance",    av:"regoracle", ch:"intel-regulatory", s:"green",  q:"8.7", last:"08:00" },
+    { agent:"On-Chain Watchlist",  av:"onchain",   ch:"intel-onchain",    s:"green",  q:"8.5", last:"13:30" },
+    { agent:"Sanctions Monitor",   av:"sanctions", ch:"intel-onchain",    s:"green",  q:"8.9", last:"14:06" },
+    { agent:"DeFi Monitor",        av:"onchain",   ch:"intel-onchain",    s:"red",    q:"—",   last:"06-12" },
+    { agent:"Research Digest",     av:"research",  ch:"intel-research",   s:"yellow", q:"7.1", last:"09:40" },
+    { agent:"Breaking News",       av:"research",  ch:"intel-research",   s:"yellow", q:"7.6", last:"11:15" },
+    { agent:"Synthesis Engine",    av:"synthesis", ch:"digest",           s:"green",  q:"8.4", last:"06:00" },
+    { agent:"Fleet Watchdog",      av:"watchdog",  ch:"fleet-ops",        s:"green",  q:"8.8", last:"14:00" },
+    { agent:"Fleet Query",         av:"query",     ch:"ask-fleet",        s:"green",  q:"—",   last:"13:48" },
+  ],
+  attention: [
+    { sev:"crit", e:"🔴", t:"Sanctions hit on watched address 0xAB…01", d:"1.2M USDT exposure · acknowledged 14:11 UTC", ch:"intel-onchain" },
+    { sev:"high", e:"🟠", t:"Interpretive guidance flagged for compliance review", d:"custody-rule perimeter · Tuesday markup calendared", ch:"intel-regulatory" },
+    { sev:"info", e:"🔧", t:"DeFi Monitor down — auto-repair fix staged", d:"endpoint timeout, 3 failures · awaiting operator gate", ch:"fleet-ops" },
+    { sev:"high", e:"🟡", t:"Research Digest degraded — 1 fallback", d:"primary feed timeout · quality dipped to 7.1", ch:"intel-research" },
+  ],
+  digest: [
+    { h:"🔴 Top of mind", t:"Sanctions hit on 0xAB…01 (1.2M USDT). Acknowledged 14:11 UTC." },
+    { h:"📈 Markets", t:"Sector rotation into L1 alternatives; ETH-BTC at a 3-month low. No breaches." },
+    { h:"⚖️ Regulatory", t:"Tuesday markup confirmed. One guidance note flagged HIGH for review." },
+    { h:"🔗 On-chain", t:"1 critical (above). 4 routine watchlist updates; no other breaches." },
+  ],
+};
+
 /* ============ render ============ */
 function sidebarChannelRow(id, active){
   const c = CHANNELS[id];
@@ -614,6 +708,11 @@ function renderSidebar(active){
   let html = `<div class="ws-head">
       <div class="ws-logo">AF</div>
       <div><div class="name">Agent Fleet</div><div class="who">operator</div></div>
+    </div>`;
+  html += `<div class="grp" style="padding-bottom:6px">
+      <button class="chan ${active==='home'?'active':''}" data-ch="home">
+        <span class="hash">🏠</span><span class="nm" style="${active==='home'?'':'font-weight:600;color:#fff'}">Fleet Home</span>
+      </button>
     </div>`;
   for (const g of SIDEBAR){
     html += `<div class="grp"><div class="grp-label">${g.label}</div>`;
@@ -714,20 +813,127 @@ function renderCanvas(id){
     <div class="cv-body">${body}</div>${legend()}`;
 }
 
+function renderHome(){
+  document.getElementById("chanHead").innerHTML = `
+    <div class="chan-title">🏠 Fleet Home</div>
+    <div class="health"><span class="dot">🟡</span><span>1 agent down · 2 degraded · 1 open escalation · budget on target</span></div>`;
+  document.getElementById("composer").innerHTML = "";
+
+  const kpis = HOME.kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kn">${k.n}</div><div class="kl">${k.l}</div>
+      ${k.bar!=null ? `<div class="progress" style="margin-top:8px"><span style="width:${k.bar}%"></span></div>` : ""}
+      <div class="ks" style="color:var(--muted)">${k.s}</div>
+    </div>`).join("");
+
+  const tiles = HOME.tiles.map(t=>{
+    const dot = t.s==="green"?"🟢":t.s==="yellow"?"🟡":"🔴";
+    return `<div class="tile s-${t.s}" data-ch="${t.ch}" role="button" tabindex="0">
+      <div class="ta"><span style="font-size:.95rem">${dot}</span> ${t.agent}</div>
+      <div class="tc">#${t.ch}</div>
+      <div class="tm"><span>quality <b>${t.q}</b></span><span>last <b>${t.last}</b></span></div>
+    </div>`;
+  }).join("");
+
+  const attn = HOME.attention.map(x=>`
+    <div class="attn-row ${x.sev}" data-ch="${x.ch}" role="button" tabindex="0">
+      <span class="ae">${x.e}</span>
+      <div class="ab"><div class="at">${x.t}</div><div class="ad">${x.d}</div></div>
+      <span class="ach">#${x.ch} →</span>
+    </div>`).join("");
+
+  const digest = HOME.digest.map(d=>`<div class="dr"><b>${d.h}</b> — ${d.t}</div>`).join("");
+
+  document.getElementById("feed").innerHTML = `
+    <div class="home">
+      <h2>Fleet Home</h2>
+      <p class="lede">The operator's first glance — fleet-wide state aggregated across every channel. Answers "is anything on fire?" before you open a single feed. Click any tile or item to jump to its channel.</p>
+
+      <section><h3>At a glance <span class="rule"></span></h3>
+        <div class="kpis">${kpis}</div>
+      </section>
+
+      <section><h3>Needs attention <span class="rule"></span></h3>
+        <div class="attn">${attn}</div>
+      </section>
+
+      <div class="twocol">
+        <section><h3>Agent health · 12 agents <span class="rule"></span></h3>
+          <div class="tiles">${tiles}</div>
+        </section>
+        <section><h3>Today's digest · AM brief <span class="rule"></span></h3>
+          <div class="digest-mini">${digest}</div>
+          <p style="font-size:.74rem;color:var(--faint);margin-top:8px">Posted to <span style="color:var(--accent)">#digest</span> 14:15 UTC · next brief 22:00 UTC</p>
+        </section>
+      </div>
+    </div>`;
+  document.getElementById("feed").scrollTop = 0;
+
+  // click-through from tiles / attention rows / digest link to channels
+  document.querySelectorAll('#feed [data-ch]').forEach(el=>{
+    el.addEventListener("click", ()=>select(el.dataset.ch));
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(el.dataset.ch); } });
+  });
+}
+
+function renderHomeCanvas(){
+  document.getElementById("canvasPane").innerHTML = `
+    <div class="cv-head"><div class="k">📋 Fleet legend</div><div class="t">How to read this workspace</div></div>
+    <div class="cv-body">
+      <div class="cv-sec"><h4>Channel groups</h4><ul>
+        <li>🛰 <b>intel-*</b> — topic intelligence feeds</li>
+        <li>🚨 <b>#alerts</b> — critical escalation only (notifies)</li>
+        <li>📊 <b>#fleet-ops</b> — health, runs, budget</li>
+        <li>🗞 <b>#digest</b> — consolidated daily briefs</li>
+        <li>💬 <b>#ask-fleet</b> — interactive Q&amp;A</li>
+        <li>🧪 <b>#lab</b> — staging for new agents</li>
+      </ul></div>
+      <div class="cv-sec"><h4>Severity</h4>
+        <p>🔴 critical · 🟠 high · 🟡 medium · 🟢 low · 🔵 info</p></div>
+      <div class="cv-sec"><h4>Routing</h4>
+        <p>Severity → destination is fleet-wide and mechanical. CRITICAL fans out to #alerts + operator DM; routine output stays in its topic channel.</p></div>
+    </div>${legend()}`;
+}
+
 function renderComposer(id){
   const c = CHANNELS[id];
-  document.getElementById("composer").innerHTML = `
+  const comp = document.getElementById("composer");
+  comp.innerHTML = `
     <div class="box">
       <div class="tools"><span title="bold">𝐁</span><span title="italic">𝑖</span><span title="link">🔗</span><span title="list">≣</span><span title="code">＜＞</span></div>
-      <div class="field">Message #${c.title}<span class="send">➤ Send</span></div>
+      <div class="field" style="padding:0">
+        <input id="composerInput" type="text" placeholder="Message #${c.title}"
+          style="flex:1;background:none;border:none;outline:none;color:var(--text);font:inherit;font-size:.9rem;padding:9px 12px"
+          autocomplete="off">
+        <button class="send" id="composerSend" style="margin:6px 8px 6px 0;cursor:pointer;border:none">➤ Send</button>
+      </div>
     </div>
     <div class="hint">
       <span><kbd>↑</kbd><kbd>↓</kbd> change channel</span>
       <span><kbd>t</kbd> toggle theme</span>
       <span>click <b>▸ replies</b> to expand a thread</span>
-      <span style="color:var(--faint)">composer is illustrative — this is a static mockup</span>
+      <span style="color:var(--faint)">type to post a demo message — local only, resets on refresh</span>
     </div>`;
+  const input = comp.querySelector("#composerInput");
+  const send = comp.querySelector("#composerSend");
+  const post = ()=>{
+    const text = input.value.trim();
+    if (!text) return;
+    const feed = document.getElementById("feed");
+    feed.insertAdjacentHTML("beforeend", renderMsg({
+      author:"Operator", av:"operator", ts:nowHM(), plain:true, body:escapeHtml(text)
+    }));
+    input.value = "";
+    feed.scrollTop = feed.scrollHeight;
+    send.style.opacity = ".5";
+  };
+  input.addEventListener("input", ()=>{ send.style.opacity = input.value.trim() ? "1" : ".5"; });
+  input.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); post(); } });
+  send.addEventListener("click", post);
 }
+
+function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function escapeHtml(s){ return s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 function legend(){
   return `<div class="legend">
@@ -738,10 +944,17 @@ function legend(){
 }
 
 let current = null;
-const CHANNEL_ORDER = SIDEBAR.flatMap(g=>g.channels);
+const CHANNEL_ORDER = ["home", ...SIDEBAR.flatMap(g=>g.channels)];
 
 function select(id){
   current = id;
+  if (id === "home"){
+    renderSidebar("home");
+    renderHome();
+    renderHomeCanvas();
+    history.replaceState(null, "", "#home");
+    return;
+  }
   renderSidebar(id);
   renderHead(id);
   renderFeed(id);
@@ -785,7 +998,7 @@ document.addEventListener("keydown", (e)=>{
 
 /* boot */
 const start = (location.hash||"").replace("#","");
-select(CHANNELS[start] ? start : "intel-onchain");
+select((start === "home" || CHANNELS[start]) ? start : "home");
 </script>
 </body>
 </html>
