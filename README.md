@@ -14,7 +14,9 @@ A reference architecture for operating multiple autonomous agents as a cohesive 
 
 Every agent is a structured natural language prompt executed on a schedule. Agents gather live data from external sources, maintain persistent memory across runs via Slack Canvases and a SQLite data layer, rate their own output quality, and — when something breaks — repair themselves without human intervention. A JIT budget manager monitors fleet-wide token consumption and autonomously throttles agent frequencies as resource limits approach, preserving output quality by reducing run count rather than degrading the model or prompt depth.
 
-This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Twenty-two additional agent specs are included in `examples/` as prompt-only references — including a dedicated compliance-operations tier (control testing, risk register maintenance, sanctions-list monitoring, model governance, committee reporting, examination response) — and companion analytical dashboards in [`showcase/`](showcase/) illustrate the visual half of the output stack.
+This repository documents the architecture, design decisions, and operational patterns. It also includes runnable Python reference agents wired to GitHub Actions so the scheduling and observability story is demonstrated end-to-end — not just described. Twenty-five additional agent specs are included in `examples/` as prompt-only references — including a dedicated compliance-operations tier (control testing, risk register maintenance, sanctions-list and PEP screening, data-quality gating, case-file QA, model governance, committee reporting, examination response) — and companion analytical dashboards in [`showcase/`](showcase/) illustrate the visual half of the output stack.
+
+> **Looking for the analytical content rather than the runtime?** That is the companion repository: **[analyst-toolkit](https://github.com/maxmoran23/analyst-toolkit)** — 68 paste-ready prompt templates across 13 categories, 13 runnable scoring engines that each ship reproducible validation evidence, and 15 team hubs indexing it all by function across a financial-crime organization. This repo is the runtime; that repo is the content. Several of the compliance-operations specs below are the scheduled-agent form of an engine documented there.
 
 ---
 
@@ -201,7 +203,7 @@ See **[showcase/README.md](showcase/README.md)** for context, audience, and how 
 
 ## Example Agents
 
-Twenty-two fully specified example agents, organized by complexity and domain. Each includes a complete `AGENT.md` with the full production pattern — state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence.
+Twenty-five fully specified example agents, organized by complexity and domain. Each includes a complete `AGENT.md` with the full production pattern — state loading, data gathering with fallback chains, quality self-assessment, structured output, and state persistence.
 
 ### Entry-level (demonstrates the basic production pattern)
 
@@ -235,7 +237,7 @@ Twenty-two fully specified example agents, organized by complexity and domain. E
 
 ### Compliance operations (institutional assurance patterns)
 
-Agent specs for the second-line and assurance side of a compliance program at a financial institution — the same production pattern applied to controls, governance, and regulatory response.
+Agent specs for the second-line and assurance side of a compliance program at a financial institution — the same production pattern applied to controls, governance, and regulatory response. The last three are the scheduled-agent form of engines documented in the [analyst-toolkit](https://github.com/maxmoran23/analyst-toolkit) companion repo, and each demonstrates a *hard gate*: an invariant no score, weight, or average can override.
 
 | Agent | Domain | Demonstrates |
 |-------|--------|-------------|
@@ -246,6 +248,9 @@ Agent specs for the second-line and assurance side of a compliance program at a 
 | [Committee Pack Assembler](examples/committee-pack-assembler/AGENT.md) | Governance reporting | KPI/KRI aggregation, escalations, prior-action tracking |
 | [Exam Response Coordinator](examples/exam-response-coordinator/AGENT.md) | Regulatory response | Request register, evidence mapping, pre-submission QC |
 | [Compliance Intelligence Hub](examples/compliance-intelligence-hub/AGENT.md) | Cross-agent aggregation | Composite pressure index, jurisdiction tiering, consolidated reporting |
+| [PEP Screening Monitor](examples/pep-screening-monitor/AGENT.md) | Screening triage | Two-axis disposition, provable-cause clearing, never-clear invariants |
+| [Data Quality Sentinel](examples/data-quality-sentinel/AGENT.md) | Data governance | Upstream feed gating, hard blocking threshold, zero silent repair |
+| [Case QA Reviewer](examples/case-qa-reviewer/AGENT.md) | Investigations QA | Critical-check veto over a weighted score, reproducible sampling basis |
 
 See **[QUICKSTART.md](QUICKSTART.md)** for deploying any of these as a Claude Code scheduled task.
 
@@ -344,7 +349,7 @@ Claude-Agent-Fleet/
 │   ├── crypto-aml-typology-engine/       # 15-typology AML reference library
 │   └── regulatory-intelligence-tracker/  # Digital-asset regulatory landscape
 │
-├── tests/                                # 264 unit + integration tests (incl. examples lint)
+├── tests/                                # 291 unit + integration tests (incl. examples lint)
 │   ├── test_config.py
 │   ├── test_runner.py
 │   ├── test_publisher.py
@@ -356,7 +361,7 @@ Claude-Agent-Fleet/
 │   ├── pull_request_template.md
 │   └── dependabot.yml                    # Weekly pip + actions updates
 │
-├── examples/                             # 22 prompt-only agent specs (AGENT.md format)
+├── examples/                             # 25 prompt-only agent specs (AGENT.md format)
 │   ├── research-digest/                  # Entry-level
 │   ├── breaking-news-monitor/            # Entry-level
 │   ├── market-pulse/                     # Entry-level
@@ -378,7 +383,10 @@ Claude-Agent-Fleet/
 │   ├── model-governance-monitor/         # Compliance operations
 │   ├── committee-pack-assembler/         # Compliance operations
 │   ├── exam-response-coordinator/        # Compliance operations
-│   └── compliance-intelligence-hub/      # Compliance operations
+│   ├── compliance-intelligence-hub/      # Compliance operations
+│   ├── pep-screening-monitor/            # Compliance operations
+│   ├── data-quality-sentinel/            # Compliance operations
+│   └── case-qa-reviewer/                 # Compliance operations
 │
 ├── docs/
 │   ├── patterns/                         # 13 deep-dive pattern docs

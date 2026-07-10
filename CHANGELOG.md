@@ -12,6 +12,26 @@ Framework continues to evolve. See commit history for in-progress changes.
 
 ---
 
+## [1.6.0] — 2026-07-09
+
+Hard-gate release: three compliance-operations example specs that each demonstrate an invariant no score can override, and an explicit companion-repo relationship with [analyst-toolkit](https://github.com/maxmoran23/analyst-toolkit). Examples grow from 22 to 25; the test suite from 264 to 291.
+
+### Added
+
+- `examples/pep-screening-monitor/` — works a politically-exposed-person alert queue on two independent axes (is this the listed person; does the entry still carry material risk), clearing only on a provable named cause. Invariants: a currently-serving official, a senior former official, and any corroborated identity are never auto-cleared, and a clear without a written basis is routed to analyst review rather than recorded.
+- `examples/data-quality-sentinel/` — gates inbound customer extracts before any screening agent reads them: named rules across five quality dimensions, a critical-data-element scorecard, and a feed verdict (`FEED_PASS` / `INVESTIGATE` / `BLOCK_FEED_TO_SCREENING`). The screening-critical ceiling is a structural gate, not a weight, and the agent never drops, imputes, or repairs a record — `records_repaired` is emitted as `0` on every run so a non-zero value reads as a defect.
+- `examples/case-qa-reviewer/` — second-line structural QA of completed investigation case files: named critical checks applied before any weighted scoring, a reproducible sampling basis recorded per run, and a `PASS` / `REMEDIATE` / `REWORK` disposition. A single failed critical check forces `REWORK` regardless of composite score; the error taxonomy reports by deficiency type, never as a per-investigator ranking.
+
+### Changed
+
+- `README.md` — example count 22 to 25, compliance-operations tier gains the three specs above, repository tree and test count refreshed. New companion-repo callout under **What This Is**: this repo is the runtime, [analyst-toolkit](https://github.com/maxmoran23/analyst-toolkit) is the content (68 prompt templates across 13 categories, 13 runnable scoring engines with reproducible validation evidence, 15 team hubs). Several compliance-operations specs are the scheduled-agent form of an engine documented there.
+
+### Notes
+
+The three new specs are prompt-only references and pass the `tests/test_examples.py` structural lint unchanged — no lint rules were relaxed to accommodate them. Each is a triage or gating function: none clears, blocks, files, or closes anything on its own authority.
+
+---
+
 ## [1.5.0] — 2026-06-10
 
 Runnable-proof release: a sixth runnable reference agent, runnable implementations of the kernel patterns, structural CI enforcement for example specs, and live GitHub Pages demos for the showcase dashboards.
