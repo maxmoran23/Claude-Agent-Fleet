@@ -8,6 +8,18 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added — Slack environment layer
+
+- `schemas/slack-workspace-architecture.md` — authoritative channel taxonomy and setup guide for the fleet's Slack workspace: the `intel-*` / `#alerts` / `#fleet-ops` / `#digest` / `#ask-fleet` / `#lab` channel groups, naming conventions, the agent→channel routing matrix, threading discipline (`one-thread-per-run` vs `one-thread-per-entity`), per-channel furniture (pinned canvas, four-bookmark bar, Watchdog-rewritten health-line topic), a notification strategy that keeps `intel-*` muted so `#alerts` means something, a setup checklist, and anti-patterns.
+- `schemas/slack-block-kit-templates.md` — the visual component library for everything agents post: a fixed Block Kit block-order grammar (header → context → section/fields → image card → divider → actions → footer), copy-paste-ready payloads for Intel Report / Alert Card / Daily Digest / Fleet Status / Quality Scorecard, a fleet-wide severity color+emoji convention, interactive-element conventions (button styles, overflow menus, `action_id` patterns), and accessibility rules (alt text, never color-alone).
+- `showcase/slack-workspace/index.html` — interactive, dependency-free mockup of the whole workspace: channel sidebar with the taxonomy, realistically-styled agent posts rendering the Block Kit components, critical alert cards, a consolidated digest, interactive Q&A, and pinned state canvases in the right pane. Click between channels; dark/light toggle. Wired into the showcase landing page and README.
+
+### Enhanced — Slack workspace mockup
+
+- `showcase/slack-workspace/index.html` — added a **Fleet Home overview** as the default landing surface: KPI strip (agents, open escalations, weekly budget, average quality), a 12-agent health-tile grid, a "needs attention" list, and a digest preview — the single-glance "is anything on fire?" view, with every tile and item click-through to its channel. Made the **composer functional** (type to post a local demo message into the feed). Plus **expandable threads** (click any thread to reveal in-thread cross-references and operator notes), **keyboard navigation** (`↑`/`↓` or `j`/`k` between channels, `t` to toggle theme), and **sidebar unread markers** that reinforce the muted-by-default notification strategy.
+- `showcase/images/slack-workspace.svg` + `showcase/index.html` — hand-crafted SVG thumbnail for the mockup so the showcase landing grid is visually consistent with the image-topped dashboards.
+- `docs/RESTORE-POINTS.md` — durable revert anchors tracked by commit SHA (the remote rejects tag pushes), starting with the Slack environment layer's initial shipped form (`fb8abd4`).
+
 Framework continues to evolve. See commit history for in-progress changes.
 
 ---

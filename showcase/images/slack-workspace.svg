@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-label="Fleet Slack workspace mockup preview: channel sidebar and a Block Kit intelligence post">
+  <defs>
+    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5b8cff"/><stop offset="1" stop-color="#8a5bff"/>
+    </linearGradient>
+    <linearGradient id="ava" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2e7d32"/><stop offset="1" stop-color="#66bb6a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- canvas -->
+  <rect width="800" height="360" fill="#0d1117"/>
+
+  <!-- ===== sidebar ===== -->
+  <rect width="220" height="360" fill="#1a1d29"/>
+  <!-- workspace header -->
+  <rect x="16" y="18" width="34" height="34" rx="8" fill="url(#logo)"/>
+  <text x="33" y="40" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">AF</text>
+  <text x="60" y="34" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#fff">Agent Fleet</text>
+  <text x="60" y="48" font-family="Inter, Arial, sans-serif" font-size="10" fill="#7e8493">🟢 operator</text>
+  <line x1="0" y1="66" x2="220" y2="66" stroke="#000" stroke-opacity="0.25"/>
+
+  <!-- group label -->
+  <text x="18" y="88" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="1" fill="#7e8493">INTELLIGENCE FEEDS</text>
+  <!-- channels -->
+  <g font-family="Inter, Arial, sans-serif" font-size="12" fill="#c9cdd6">
+    <text x="20" y="110"><tspan fill="#7e8493">#</tspan> intel-markets</text>
+    <text x="20" y="134"><tspan fill="#7e8493">#</tspan> intel-regulatory</text>
+    <!-- active -->
+    <rect x="10" y="142" width="200" height="22" rx="6" fill="#2b3a63"/>
+    <text x="20" y="158" fill="#fff" font-weight="700"><tspan fill="#cfe0ff">#</tspan> intel-onchain</text>
+    <circle cx="198" cy="153" r="8" fill="#d7263d"/>
+    <text x="198" y="157" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+    <text x="20" y="182"><tspan fill="#7e8493">#</tspan> intel-research</text>
+  </g>
+  <text x="18" y="208" font-family="Inter, Arial, sans-serif" font-size="9" font-weight="700" letter-spacing="1" fill="#7e8493">ESCALATION &amp; BRIEF</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="12" fill="#c9cdd6">
+    <text x="20" y="230"><tspan fill="#7e8493">#</tspan> alerts</text>
+    <circle cx="198" cy="225" r="8" fill="#d7263d"/>
+    <text x="198" y="229" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">1</text>
+    <text x="20" y="254"><tspan fill="#7e8493">#</tspan> digest</text>
+  </g>
+
+  <!-- ===== main pane ===== -->
+  <!-- channel header -->
+  <text x="244" y="34" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" fill="#e6edf3"><tspan fill="#8b949e">#</tspan> intel-onchain</text>
+  <text x="244" y="52" font-family="Inter, Arial, sans-serif" font-size="10.5" fill="#8b949e">🟢 healthy · last run 14:06 UTC · quality 8.9 · 1 open escalation</text>
+  <line x1="232" y1="66" x2="800" y2="66" stroke="#30363d"/>
+
+  <!-- message: avatar -->
+  <rect x="244" y="88" width="38" height="38" rx="9" fill="#c62828"/>
+  <text x="263" y="113" font-size="17" text-anchor="middle">🛡️</text>
+  <text x="294" y="98" font-family="Inter, Arial, sans-serif" font-size="12.5" font-weight="700" fill="#e6edf3">Sanctions List Monitor</text>
+  <rect x="430" y="88" width="30" height="13" rx="3" fill="#1c222b" stroke="#30363d"/>
+  <text x="445" y="98" font-family="Inter, Arial, sans-serif" font-size="8" font-weight="700" fill="#8b949e" text-anchor="middle">APP</text>
+  <text x="470" y="98" font-family="Inter, Arial, sans-serif" font-size="10" fill="#6e7681">14:06</text>
+
+  <!-- block kit card with critical stripe -->
+  <rect x="294" y="108" width="478" height="176" rx="10" fill="#161b22" stroke="#30363d"/>
+  <rect x="294" y="108" width="4" height="176" fill="#d7263d"/>
+  <text x="312" y="132" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" fill="#e6edf3">🔴 CRITICAL — Sanctions hit on watched address</text>
+  <text x="312" y="150" font-family="Inter, Arial, sans-serif" font-size="10" fill="#8b949e">14:06 UTC · run sm-2026-0614-1406 · quality 8.9/10</text>
+  <!-- body lines -->
+  <rect x="312" y="160" width="440" height="7" rx="3" fill="#30363d"/>
+  <rect x="312" y="172" width="400" height="7" rx="3" fill="#30363d"/>
+  <!-- field grid -->
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="312" y="202" font-size="9" font-weight="700" fill="#8b949e">SOURCE</text>
+    <text x="312" y="216" font-size="11" fill="#e6edf3">Sanctions List Monitor</text>
+    <text x="560" y="202" font-size="9" font-weight="700" fill="#8b949e">EXPOSURE</text>
+    <text x="560" y="216" font-size="11" fill="#e6edf3">1.2M USDT</text>
+    <text x="312" y="236" font-size="9" font-weight="700" fill="#8b949e">CONFIDENCE</text>
+    <text x="312" y="250" font-size="11" fill="#e6edf3">HIGH (direct match)</text>
+    <text x="560" y="236" font-size="9" font-weight="700" fill="#8b949e">DETECTED</text>
+    <text x="560" y="250" font-size="11" fill="#e6edf3">14:06 UTC</text>
+  </g>
+  <line x1="294" y1="262" x2="772" y2="262" stroke="#30363d"/>
+  <!-- action buttons -->
+  <rect x="312" y="270" width="78" height="9" rx="4.5" fill="#d7263d" opacity="0.85"/>
+  <rect x="398" y="270" width="86" height="9" rx="4.5" fill="#2eb872" opacity="0.85"/>
+  <rect x="492" y="270" width="70" height="9" rx="4.5" fill="#0d1117" stroke="#30363d"/>
+
+  <!-- reactions + thread -->
+  <rect x="294" y="298" width="46" height="18" rx="9" fill="#1c222b" stroke="#30363d"/>
+  <text x="317" y="310" font-size="10" fill="#8b949e" text-anchor="middle">🚨 1</text>
+  <rect x="346" y="298" width="46" height="18" rx="9" fill="#1c222b" stroke="#30363d"/>
+  <text x="369" y="310" font-size="10" fill="#8b949e" text-anchor="middle">👀 4</text>
+  <text x="402" y="311" font-family="Inter, Arial, sans-serif" font-size="10.5" fill="#58a6ff">↳ 5 replies · Operator acknowledged 14:11</text>
+
+  <!-- right edge canvas hint -->
+  <line x1="772" y1="66" x2="772" y2="360" stroke="#30363d"/>
+</svg>

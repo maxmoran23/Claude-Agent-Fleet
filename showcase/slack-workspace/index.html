@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fleet Slack Workspace — Interactive Mockup</title>
+<meta name="description" content="A self-contained, interactive mockup of the Claude Agent Fleet's Slack workspace: channel taxonomy, Block Kit message components, alerts, digests, and canvases.">
+<style>
+  :root {
+    /* content surfaces (match the rest of the showcase) */
+    --bg: #0d1117; --surface: #161b22; --surface-2: #1c222b; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --faint: #6e7681; --accent: #58a6ff;
+    /* slack-flavored sidebar */
+    --side: #1a1d29; --side-2: #20232f; --side-text: #c9cdd6; --side-muted: #7e8493;
+    --side-active: #3d7eff; --side-active-bg: #2b3a63;
+    /* severities */
+    --crit: #ff5b6e; --crit-bar: #d7263d; --high: #ff8a4c; --high-bar: #f46a25;
+    --med: #ffd24c; --med-bar: #f4c025; --low: #4fd18b; --low-bar: #2eb872;
+    --info: #6ea8ff; --info-bar: #3d7eff;
+    --radius: 10px;
+    --mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-theme="light"] {
+    --bg: #ffffff; --surface: #f6f8fa; --surface-2: #eef1f5; --border: #d0d7de;
+    --text: #1f2328; --muted: #59636e; --faint: #818b96; --accent: #0969da;
+    --side: #3f0e40; --side-2: #4a154b; --side-text: #e8d9e9; --side-muted: #bfa9c0;
+    --side-active: #1164a3; --side-active-bg: #1164a3;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 18px; background: var(--surface);
+    border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 30;
+  }
+  .topbar .brand { font-weight: 700; letter-spacing: .01em; font-size: .98rem; }
+  .topbar .brand span { color: var(--muted); font-weight: 400; }
+  .topbar .spacer { flex: 1; }
+  .topbar a, .pill {
+    color: var(--muted); text-decoration: none; font-size: .82rem;
+    border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px;
+    background: var(--bg); cursor: pointer; transition: all .15s ease;
+  }
+  .topbar a:hover, .pill:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ---------- layout ---------- */
+  .app {
+    display: grid; grid-template-columns: 270px minmax(0,1fr) 340px;
+    height: calc(100vh - 49px); min-height: 0;
+  }
+  @media (max-width: 1100px) { .app { grid-template-columns: 240px minmax(0,1fr); } .canvaspane { display: none; } }
+  @media (max-width: 760px)  { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  /* ---------- sidebar ---------- */
+  .sidebar {
+    background: var(--side); color: var(--side-text);
+    overflow-y: auto; border-right: 1px solid rgba(0,0,0,.25);
+  }
+  .ws-head {
+    padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ws-logo {
+    width: 34px; height: 34px; border-radius: 8px; flex: none;
+    background: linear-gradient(135deg, #5b8cff, #8a5bff);
+    display: grid; place-items: center; font-weight: 800; color: #fff; font-size: .9rem;
+  }
+  .ws-head .name { font-weight: 700; font-size: .92rem; color: #fff; line-height: 1.15; }
+  .ws-head .who { font-size: .74rem; color: var(--side-muted); }
+  .ws-head .who::before { content: "🟢 "; }
+
+  .grp { padding: 14px 8px 2px; }
+  .grp-label {
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--side-muted); padding: 4px 10px; font-weight: 700;
+  }
+  .chan {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    padding: 6px 10px; border-radius: 6px; cursor: pointer;
+    color: var(--side-text); font-size: .9rem; border: none; background: none;
+    text-align: left; transition: background .12s ease;
+  }
+  .chan:hover { background: var(--side-2); }
+  .chan.active { background: var(--side-active-bg); color: #fff; font-weight: 600; }
+  .chan .hash { color: var(--side-muted); width: 16px; text-align: center; flex: none; }
+  .chan.active .hash { color: #cfe0ff; }
+  .chan .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chan .badge {
+    background: var(--crit); color: #fff; font-size: .68rem; font-weight: 700;
+    border-radius: 999px; padding: 1px 7px; flex: none;
+  }
+  .chan .badge.soft { background: rgba(255,255,255,.16); color: #fff; }
+  .chan .mute { font-size: .72rem; color: var(--side-muted); flex: none; }
+
+  /* ---------- main message pane ---------- */
+  .main { display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+  .chan-head {
+    padding: 12px 22px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  .chan-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.04rem; }
+  .chan-title .hash { color: var(--muted); }
+  .chan-title .star { color: var(--faint); font-size: .9rem; }
+  .health {
+    margin-top: 5px; font-size: .8rem; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .health .dot { font-size: .7rem; }
+  .bookmarks { margin-top: 9px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .bm {
+    font-size: .76rem; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--border); border-radius: 6px; padding: 3px 9px;
+    background: var(--surface); transition: all .15s ease; cursor: pointer;
+  }
+  .bm:hover { color: var(--text); border-color: var(--accent); }
+
+  .feed { overflow-y: auto; padding: 8px 0 20px; flex: 1; }
+  .daysep { display: flex; align-items: center; gap: 12px; margin: 14px 22px 6px; }
+  .daysep::before, .daysep::after { content: ""; height: 1px; background: var(--border); flex: 1; }
+  .daysep span {
+    font-size: .74rem; font-weight: 700; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 2px 12px; background: var(--surface);
+  }
+
+  /* ---------- a slack message ---------- */
+  .msg { display: flex; gap: 12px; padding: 9px 22px; position: relative; }
+  .msg:hover { background: var(--surface); }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 9px; flex: none;
+    display: grid; place-items: center; font-size: 1.1rem; color: #fff; font-weight: 700;
+  }
+  .msg-body { min-width: 0; flex: 1; }
+  .msg-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .msg-head .author { font-weight: 700; font-size: .92rem; }
+  .msg-head .bot {
+    font-size: .62rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+    background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0 4px; transform: translateY(-1px);
+  }
+  .msg-head .ts { font-size: .74rem; color: var(--faint); }
+
+  /* ---------- block kit card ---------- */
+  .bk {
+    margin-top: 6px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); overflow: hidden; max-width: 720px;
+  }
+  .bk.stripe { border-left: 4px solid var(--accent); }
+  .bk.crit { border-left-color: var(--crit-bar); }
+  .bk.high { border-left-color: var(--high-bar); }
+  .bk.med  { border-left-color: var(--med-bar); }
+  .bk.low  { border-left-color: var(--low-bar); }
+  .bk.info { border-left-color: var(--info-bar); }
+  .bk-inner { padding: 13px 16px; }
+  .bk h3 { font-size: .98rem; line-height: 1.3; display: flex; gap: 7px; align-items: baseline; }
+  .bk .ctx { font-size: .76rem; color: var(--muted); margin-top: 5px; }
+  .bk .ctx code, .bk .body code, .fieldv code {
+    font-family: var(--mono); font-size: .82em; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 4px; padding: 0 4px;
+  }
+  .bk .body { margin-top: 9px; font-size: .89rem; color: var(--text); }
+  .bk .body b, .fields b { color: var(--text); }
+  .fields {
+    margin-top: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px 18px;
+  }
+  .field .fieldk { font-size: .72rem; color: var(--muted); font-weight: 700; }
+  .field .fieldv { font-size: .9rem; margin-top: 1px; }
+  .bk-divider { height: 1px; background: var(--border); margin: 0; }
+
+  /* dynamic image card placeholder */
+  .imgcard {
+    margin-top: 11px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    background: #0a0c10;
+  }
+  [data-theme="light"] .imgcard { background: #0d1117; }
+  .imgcard .ic-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 14px 16px 4px; }
+  .imgcard .ic-label { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; color: #8b949e; }
+  .imgcard .ic-ts { font-size: .68rem; color: #586069; font-family: var(--mono); }
+  .imgcard .ic-num { font-size: 2.3rem; font-weight: 800; color: #e6edf3; padding: 0 16px; line-height: 1.1; }
+  .imgcard .ic-num .trend { font-size: 1rem; font-weight: 700; margin-left: 8px; }
+  .imgcard .ic-foot { display: flex; gap: 18px; padding: 4px 16px 14px; }
+  .imgcard .ic-foot div { font-size: .72rem; color: #8b949e; }
+  .imgcard .ic-foot b { color: #c9d1d9; }
+  .imgcard .ic-alt { font-size: .68rem; color: var(--faint); padding: 6px 16px; border-top: 1px solid var(--border); background: var(--surface); font-style: italic; }
+  .trend.up { color: var(--low); } .trend.down { color: var(--crit); } .trend.flat { color: var(--muted); }
+
+  /* actions row */
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; padding: 11px 16px; align-items: center; }
+  .btn {
+    font-size: .82rem; font-weight: 600; border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); border-radius: 7px; padding: 6px 12px; cursor: pointer; transition: all .14s ease;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--low-bar); border-color: var(--low-bar); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.danger { background: var(--crit-bar); border-color: var(--crit-bar); color: #fff; }
+  .btn.danger:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; }
+  .overflow {
+    margin-left: auto; border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+    border-radius: 7px; width: 30px; height: 30px; cursor: pointer; font-weight: 700;
+  }
+  .overflow:hover { color: var(--text); border-color: var(--accent); }
+  .bk-foot { font-size: .74rem; color: var(--faint); padding: 0 16px 12px; }
+  .bk-foot em { color: var(--muted); }
+
+  /* reactions + thread line */
+  .react { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; align-items: center; }
+  .chip {
+    font-size: .78rem; border: 1px solid var(--border); background: var(--surface-2);
+    border-radius: 999px; padding: 1px 9px; color: var(--muted); cursor: default;
+  }
+  .chip b { color: var(--accent); font-weight: 700; }
+  .thread {
+    margin-top: 7px; font-size: .8rem; color: var(--accent); cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+  }
+  .thread:hover { text-decoration: underline; }
+  .thread .ava { width: 18px; height: 18px; border-radius: 5px; display: inline-grid; place-items: center; font-size: .62rem; color: #fff; }
+
+  /* ---------- canvas pane ---------- */
+  .canvaspane { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; }
+  .cv-head { padding: 14px 18px 10px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
+  .cv-head .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+  .cv-head .t { font-weight: 700; margin-top: 3px; display: flex; gap: 7px; align-items: center; }
+  .cv-body { padding: 12px 18px 40px; }
+  .cv-sec { margin-top: 16px; }
+  .cv-sec h4 { font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+  .cv-sec p, .cv-sec li { font-size: .84rem; color: var(--text); }
+  .cv-sec ul { padding-left: 18px; }
+  table.cv { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  table.cv th, table.cv td { text-align: left; padding: 5px 7px; border-bottom: 1px solid var(--border); }
+  table.cv th { color: var(--muted); font-weight: 700; font-size: .72rem; }
+  table.cv td code { font-family: var(--mono); font-size: .82em; }
+  .spark { font-family: var(--mono); font-size: .82rem; color: var(--low); letter-spacing: 1px; }
+  .legend { font-size: .76rem; color: var(--muted); padding: 14px 18px; border-top: 1px solid var(--border); }
+  .legend b { color: var(--text); }
+
+  /* expandable thread */
+  .thread .caret { transition: transform .15s ease; display: inline-block; }
+  .thread.open { font-weight: 600; }
+  .thread.open .caret { transform: rotate(90deg); }
+  .replies { margin: 4px 0 2px 6px; border-left: 2px solid var(--border); padding-left: 14px; display: none; }
+  .replies.show { display: block; }
+  .reply { display: flex; gap: 9px; padding: 6px 0; }
+  .reply .ra { width: 26px; height: 26px; border-radius: 7px; flex: none; display: grid; place-items: center; font-size: .8rem; color: #fff; }
+  .reply .rb { min-width: 0; }
+  .reply .rhead b { font-weight: 700; font-size: .83rem; }
+  .reply .rhead .rt { color: var(--faint); font-size: .72rem; margin-left: 6px; }
+  .reply .rbody { font-size: .85rem; color: var(--text); margin-top: 1px; }
+  .reply .rbody code { font-family: var(--mono); font-size: .82em; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+
+  /* unread dot in sidebar */
+  .chan .unread { width: 7px; height: 7px; border-radius: 50%; background: #4fd18b; flex: none; }
+
+  /* composer */
+  .composer { padding: 8px 22px 14px; border-top: 1px solid var(--border); background: var(--bg); }
+  .composer .box { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); overflow: hidden; }
+  .composer .tools { display: flex; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--border); color: var(--faint); font-size: .9rem; }
+  .composer .tools span { width: 26px; height: 22px; display: grid; place-items: center; border-radius: 5px; cursor: not-allowed; }
+  .composer .field { display: flex; align-items: center; padding: 9px 12px; color: var(--faint); font-size: .9rem; }
+  .composer .send { margin-left: auto; background: var(--low-bar); color: #fff; border-radius: 6px; padding: 5px 11px; font-size: .82rem; opacity: .5; font-weight: 600; }
+  .composer .hint { font-size: .72rem; color: var(--faint); margin-top: 7px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  kbd { font-family: var(--mono); font-size: .7rem; background: var(--surface-2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--muted); }
+
+  /* ---------- fleet home overview ---------- */
+  .home { padding: 18px 24px 48px; overflow-y: auto; }
+  .home h2 { font-size: 1.15rem; font-weight: 800; letter-spacing: .01em; }
+  .home .lede { color: var(--muted); font-size: .86rem; margin: 4px 0 18px; max-width: 72ch; }
+  .home section { margin-top: 24px; }
+  .home section > h3 {
+    font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+    font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .home section > h3 .rule { height: 1px; background: var(--border); flex: 1; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .kpi .kn { font-size: 1.8rem; font-weight: 800; line-height: 1.1; }
+  .kpi .kl { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+  .kpi .ks { font-size: .72rem; margin-top: 6px; }
+  .kpi.warn { border-left: 3px solid var(--med-bar); }
+  .kpi.crit { border-left: 3px solid var(--crit-bar); }
+  .kpi.ok   { border-left: 3px solid var(--low-bar); }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(208px,1fr)); gap: 10px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-left-width: 3px;
+    border-radius: 9px; padding: 11px 13px; cursor: pointer; transition: border-color .14s ease, transform .14s ease;
+  }
+  .tile:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .tile.s-green { border-left-color: var(--low-bar); }
+  .tile.s-yellow { border-left-color: var(--med-bar); }
+  .tile.s-red { border-left-color: var(--crit-bar); }
+  .tile .ta { font-weight: 700; font-size: .9rem; display: flex; align-items: center; gap: 6px; }
+  .tile .tc { font-size: .74rem; color: var(--muted); margin-top: 1px; }
+  .tile .tm { display: flex; justify-content: space-between; margin-top: 9px; font-size: .76rem; color: var(--muted); }
+  .tile .tm b { color: var(--text); }
+
+  .attn { display: flex; flex-direction: column; gap: 8px; }
+  .attn-row {
+    display: flex; gap: 11px; align-items: flex-start; background: var(--surface);
+    border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 9px; padding: 11px 14px; cursor: pointer;
+  }
+  .attn-row:hover { border-color: var(--accent); }
+  .attn-row.crit { border-left-color: var(--crit-bar); }
+  .attn-row.high { border-left-color: var(--high-bar); }
+  .attn-row.info { border-left-color: var(--info-bar); }
+  .attn-row .ae { font-size: 1.1rem; }
+  .attn-row .ab { min-width: 0; font-size: .86rem; }
+  .attn-row .ab .at { font-weight: 700; }
+  .attn-row .ab .ad { color: var(--muted); }
+  .attn-row .ach { margin-left: auto; font-size: .74rem; color: var(--accent); white-space: nowrap; }
+
+  .progress { height: 9px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--low-bar), var(--med-bar)); }
+  .home .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .home .twocol { grid-template-columns: 1fr; } }
+  .digest-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px 16px; }
+  .digest-mini .dr { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: .85rem; }
+  .digest-mini .dr:last-child { border-bottom: none; }
+  .digest-mini .dr b { font-weight: 700; }
+
+  /* intro strip */
+  .intro {
+    padding: 14px 22px; background: linear-gradient(180deg, var(--surface), transparent);
+    border-bottom: 1px solid var(--border); font-size: .84rem; color: var(--muted);
+  }
+  .intro b { color: var(--text); }
+  .badge-soft { color: var(--side-muted); }
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="topbar">
+  <span class="brand">Fleet Slack Workspace <span>· interactive mockup</span></span>
+  <div class="spacer"></div>
+  <a href="../">← Showcase</a>
+  <a href="https://github.com/maxmoran23/Claude-Agent-Fleet/blob/main/schemas/slack-workspace-architecture.md" target="_blank" rel="noopener">Architecture spec</a>
+  <button class="pill" id="themeToggle" aria-label="Toggle theme">◑ Theme</button>
+</div>
+
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <nav class="sidebar" id="sidebar"><!-- channels injected --></nav>
+
+  <!-- ============ MAIN ============ -->
+  <section class="main">
+    <header class="chan-head" id="chanHead"></header>
+    <div class="feed" id="feed"></div>
+    <div class="composer" id="composer"></div>
+  </section>
+
+  <!-- ============ CANVAS PANE ============ -->
+  <aside class="canvaspane" id="canvasPane"></aside>
+
+</div>
+
+<script>
+/* ============================================================
+   Data model — the workspace, its channels, and message blocks.
+   This is a static portrait of the fleet's Slack surface, built
+   from the conventions in schemas/slack-workspace-architecture.md
+   and schemas/slack-block-kit-templates.md.
+   ============================================================ */
+
+const AVATARS = {
+  market:    { bg: "linear-gradient(135deg,#2e7d32,#66bb6a)", ic: "📈" },
+  regoracle: { bg: "linear-gradient(135deg,#5e35b1,#9575cd)", ic: "⚖️" },
+  onchain:   { bg: "linear-gradient(135deg,#00897b,#4db6ac)", ic: "🔗" },
+  sanctions: { bg: "linear-gradient(135deg,#c62828,#ef5350)", ic: "🛡️" },
+  research:  { bg: "linear-gradient(135deg,#1565c0,#42a5f5)", ic: "🗞️" },
+  watchdog:  { bg: "linear-gradient(135deg,#37474f,#78909c)", ic: "🐕" },
+  synthesis: { bg: "linear-gradient(135deg,#6a1b9a,#ab47bc)", ic: "🧬" },
+  operator:  { bg: "linear-gradient(135deg,#455a64,#90a4ae)", ic: "🧑" },
+  query:     { bg: "linear-gradient(135deg,#0277bd,#4fc3f7)", ic: "💬" },
+};
+
+const SIDEBAR = [
+  { label: "Intelligence Feeds", channels: ["intel-markets","intel-regulatory","intel-onchain","intel-research"] },
+  { label: "Escalation & Brief", channels: ["alerts","digest"] },
+  { label: "Fleet & Interaction", channels: ["fleet-ops","ask-fleet","lab"] },
+];
+
+/* helper builders for block-kit-ish fragments */
+function fields(arr){ return `<div class="fields">${arr.map(f=>`<div class="field"><div class="fieldk">${f.k}</div><div class="fieldv">${f.v}</div></div>`).join("")}</div>`; }
+function imgcard(o){
+  return `<div class="imgcard" role="img" aria-label="${o.alt}">
+    <div class="ic-top"><span class="ic-label">${o.label}</span><span class="ic-ts">${o.ts}</span></div>
+    <div class="ic-num">${o.num}<span class="trend ${o.dir}">${o.delta}</span></div>
+    <div class="ic-foot">${o.foot.map(f=>`<div>${f}</div>`).join("")}</div>
+    <div class="ic-alt">alt: ${o.alt}</div>
+  </div>`;
+}
+function actions(btns){
+  const items = btns.map(b=>{
+    if(b.type==="overflow") return `<button class="overflow" title="More actions">⋯</button>`;
+    const cls = b.style ? `btn ${b.style}` : "btn";
+    return `<button class="${cls}">${b.t}</button>`;
+  }).join("");
+  return `<div class="actions">${items}</div>`;
+}
+
+/* ============ CHANNELS ============ */
+const CHANNELS = {
+  "intel-markets": {
+    emoji:"🛰", title:"intel-markets",
+    health:{state:"🟢", text:"healthy · last run 14:02 UTC · quality 8.6 · 0 open escalations"},
+    desc:"Market intelligence · Market Monitor + Market Pulse · 4×/day · canvas pinned",
+    badge:null, unread:true,
+    canvas:"market",
+    msgs:[
+      { author:"Market Monitor", av:"market", ts:"14:02", sev:"med",
+        title:"🟡 Sector rotation into L1 alternatives",
+        ctx:"<code>14:02 UTC</code> · run <code>mm-2026-0614-1402</code> · quality <b>8.6/10</b> · 4×/day",
+        body:"Capital is rotating out of BTC into large-cap L1 alternatives ahead of Tuesday's regulatory markup. ETH-BTC ratio at a 3-month low; SOL and AVAX leading inflows.",
+        flds:[{k:"BTC",v:"$62,400 &nbsp;🔻 2.1%"},{k:"ETH",v:"$3,200 &nbsp;🔺 1.4%"},{k:"Total Cap",v:"$2.41T &nbsp;🔺 0.8%"},{k:"Fear / Greed",v:"61 (Greed)"}],
+        img:{label:"Market Snapshot", ts:"14:02 UTC", num:"$2.41T", delta:"▲ 0.8%", dir:"up",
+             foot:["BTC <b>$62.4k</b>","ETH <b>$3.2k</b>","Vol <b>$94B</b>"],
+             alt:"Market snapshot — total cap $2.41T up 0.8%, BTC $62.4k, ETH $3.2k"},
+        btns:[{t:"📌 Open Canvas"},{t:"📈 Live Dashboard"},{type:"overflow"}],
+        foot:"Market Monitor · kernel v1.5 · #intel-markets · <em>reply in thread to enrich</em>",
+        react:[{e:"👀",n:2},{e:"📈",n:1}], thread:{avs:["synthesis","operator"], last:"Synthesis Engine 14:09"},
+        replies:[
+          {author:"Synthesis Engine", av:"synthesis", ts:"14:09", body:"Cross-reference: this rotation lines up with Tuesday's markup flagged in <code>#intel-regulatory</code>. Folding both into the 14:15 digest."},
+          {author:"Operator", av:"operator", ts:"14:12", body:"Good — watch the ETH-BTC ratio; ping me if it breaks the 3-month low intraday."},
+        ] },
+      { author:"Market Pulse", av:"market", ts:"10:00", sev:"low",
+        title:"🟢 Morning pulse — no threshold breaches",
+        ctx:"<code>10:00 UTC</code> · run <code>mp-2026-0614-1000</code> · quality <b>8.2/10</b>",
+        body:"Overnight session quiet. All watched assets inside configured bands. Volatility compressed; options skew neutral.",
+        flds:[{k:"Watched assets",v:"12 in-band"},{k:"Breaches",v:"0"}],
+        btns:[{t:"📌 Open Canvas"},{type:"overflow"}],
+        foot:"Market Pulse · kernel v1.5 · #intel-markets",
+        react:[{e:"✅",n:1}] },
+    ]
+  },
+
+  "intel-regulatory": {
+    emoji:"🛰", title:"intel-regulatory",
+    health:{state:"🟢", text:"healthy · last run 09:40 UTC · quality 9.1 · 0 open escalations"},
+    desc:"Regulatory intelligence · Regulatory Oracle + Model Governance · daily + on-event · canvas pinned",
+    badge:null, canvas:"regulatory",
+    msgs:[
+      { author:"Regulatory Oracle", av:"regoracle", ts:"09:40", sev:"high",
+        title:"🟠 Interpretive guidance flagged for compliance review",
+        ctx:"<code>09:40 UTC</code> · run <code>ro-2026-0614-0940</code> · quality <b>9.1/10</b>",
+        body:"New interpretive guidance touches the custody-rule perimeter for digital assets. Tuesday markup confirmed and added to calendar. Flagged <b>HIGH</b> — routed to compliance review and the daily digest.",
+        flds:[{k:"Instrument",v:"Interpretive guidance"},{k:"Effective",v:"On publication"},{k:"Severity",v:"HIGH"},{k:"Calendar",v:"Tue markup ✓"}],
+        btns:[{t:"📌 Open Canvas"},{t:"📑 Regulatory Tracker"},{t:"📅 Add to calendar"},{type:"overflow"}],
+        foot:"Regulatory Oracle · kernel v1.5 · #intel-regulatory · flagged to #digest",
+        react:[{e:"⚖️",n:2},{e:"👀",n:3}], thread:{avs:["operator"], last:"Operator 09:55"},
+        replies:[
+          {author:"Operator", av:"operator", ts:"09:55", body:"Routing the custody-rule read to compliance. Calendar event confirmed for the markup."},
+        ] },
+      { author:"Model Governance Monitor", av:"regoracle", ts:"08:00", sev:"low",
+        title:"🟢 Model inventory reconciled — no drift",
+        ctx:"<code>08:00 UTC</code> · run <code>mg-2026-0614-0800</code> · quality <b>8.7/10</b>",
+        body:"All registered models within validation windows. No version drift detected against the governance baseline.",
+        flds:[{k:"Models",v:"24 registered"},{k:"Overdue validations",v:"0"}],
+        btns:[{t:"📌 Open Canvas"},{type:"overflow"}],
+        foot:"Model Governance Monitor · kernel v1.5 · #intel-regulatory" },
+    ]
+  },
+
+  "intel-onchain": {
+    emoji:"🛰", title:"intel-onchain",
+    health:{state:"🟢", text:"healthy · last run 14:06 UTC · quality 8.9 · 1 open escalation"},
+    desc:"On-chain intelligence · Watchlist + Sanctions + DeFi monitors · continuous · canvas pinned",
+    badge:{type:"soft", n:"1"}, unread:true, canvas:"onchain",
+    msgs:[
+      { author:"Sanctions List Monitor", av:"sanctions", ts:"14:06", sev:"crit",
+        title:"🔴 CRITICAL — Sanctions hit on watched address",
+        ctx:"<code>14:06 UTC</code> · run <code>sm-2026-0614-1406</code> · quality <b>8.9/10</b> · escalated to #alerts + DM",
+        body:"Watched address <code>0xAB…01</code> transacted with newly-added OFAC SDN entry <b>EXAMPLE-SDN-2026-042</b>. Exposure <b>1.2M USDT</b> across 3 hops within the configured 1M threshold window.",
+        flds:[{k:"Source",v:"Sanctions List Monitor"},{k:"Detected",v:"14:06 UTC"},{k:"Confidence",v:"HIGH (direct match)"},{k:"Exposure",v:"1.2M USDT"}],
+        img:{label:"Exposure Path", ts:"14:06 UTC", num:"3 hops", delta:"▲ 1.2M USDT", dir:"down",
+             foot:["Origin <b>0xAB…01</b>","SDN <b>…042</b>","Window <b>1M</b>"],
+             alt:"Exposure path — 3 hops from 0xAB…01 to SDN-2026-042, 1.2M USDT"},
+        btns:[{t:"🔎 Full report"},{t:"✅ Acknowledge", style:"primary"},{t:"📅 Add to calendar"},{type:"overflow"}],
+        foot:"Sanctions List Monitor · kernel v1.5 · escalation: #alerts + operator DM",
+        react:[{e:"🚨",n:1},{e:"👀",n:4}], thread:{avs:["watchdog","synthesis","operator"], last:"Operator acknowledged 14:11"},
+        replies:[
+          {author:"Smart Thread Responder", av:"watchdog", ts:"14:07", body:"Cross-ref: <code>0xAB…01</code> is already on the flagged-counterparties list in the On-Chain Watchlist canvas (first seen 2026-04-19). Not a first contact."},
+          {author:"Synthesis Engine", av:"synthesis", ts:"14:08", body:"Escalation mirrored to <code>#alerts</code> + operator DM. Added to the AM digest top-of-mind."},
+          {author:"Operator", av:"operator", ts:"14:11", body:"Acknowledged — opening a case and freezing review on the counterparty."},
+        ] },
+      { author:"On-Chain Watchlist", av:"onchain", ts:"13:30", sev:"low",
+        title:"🟢 Watchlist sweep — 4 routine updates",
+        ctx:"<code>13:30 UTC</code> · run <code>ow-2026-0614-1330</code> · quality <b>8.5/10</b>",
+        body:"Routine balance changes on 4 monitored addresses, all below alert thresholds. No new counterparties of concern.",
+        flds:[{k:"Addresses swept",v:"38"},{k:"Threshold breaches",v:"0"}],
+        btns:[{t:"📌 Open Canvas"},{t:"🗂 Archive"},{type:"overflow"}],
+        foot:"On-Chain Watchlist · kernel v1.5 · #intel-onchain · one-thread-per-entity" },
+    ]
+  },
+
+  "intel-research": {
+    emoji:"🛰", title:"intel-research",
+    health:{state:"🟡", text:"degraded · last run 09:40 UTC (stale 4h) · quality 7.1 · 1 fallback"},
+    desc:"Research & news · Research Digest + Breaking News · morning + on-event · canvas pinned",
+    badge:null, canvas:null,
+    msgs:[
+      { author:"Research Digest", av:"research", ts:"09:40", sev:"med",
+        title:"🟡 Morning research digest — 6 items",
+        ctx:"<code>09:40 UTC</code> · run <code>rd-2026-0614-0940</code> · quality <b>7.1/10</b> · 1 fallback (primary feed timeout)",
+        body:"Six items curated across the digital-asset policy and market-structure beats. One primary source timed out; secondary feed used (quality flagged for the dip).",
+        flds:[{k:"Items",v:"6 curated"},{k:"Sources",v:"11 scanned"},{k:"Fallbacks",v:"1"}],
+        btns:[{t:"📌 Open Canvas"},{t:"🗂 Archive"},{type:"overflow"}],
+        foot:"Research Digest · kernel v1.5 · #intel-research · <em>watchdog notified of fallback</em>",
+        react:[{e:"🗞️",n:1}] },
+    ]
+  },
+
+  "alerts": {
+    emoji:"🚨", title:"alerts",
+    health:{state:"🔴", text:"interrupt channel · notifies on all messages · 1 open · CRITICAL only"},
+    desc:"Critical escalation only · all agents · notifies (no mute) · thin high-signal index",
+    badge:{type:"hard", n:"1"}, unread:true, canvas:null,
+    msgs:[
+      { author:"Sanctions List Monitor", av:"sanctions", ts:"14:06", sev:"crit",
+        title:"🔴 CRITICAL — Sanctions hit on watched address",
+        ctx:"escalated from <code>#intel-onchain</code> · <code>14:06 UTC</code> · confidence HIGH",
+        body:"Watched address <code>0xAB…01</code> → OFAC SDN <b>EXAMPLE-SDN-2026-042</b>. Exposure <b>1.2M USDT</b>, 3 hops. Full report lives in the #intel-onchain thread.",
+        flds:[{k:"Source",v:"Sanctions List Monitor"},{k:"Topic home",v:"#intel-onchain"}],
+        btns:[{t:"🔎 Full report", style:"danger"},{t:"✅ Acknowledge", style:"primary"}],
+        foot:"Acknowledge to clear from the open-escalations count · #alerts is index-only",
+        react:[{e:"✅",n:1}] },
+    ]
+  },
+
+  "digest": {
+    emoji:"🗞", title:"digest",
+    health:{state:"🟢", text:"consolidated brief · next 22:00 UTC · 1 notification per brief"},
+    desc:"Consolidated daily briefs · Synthesis Engine + Digest Aggregator · 2×/day · the one to read",
+    badge:null, canvas:null,
+    msgs:[
+      { author:"Synthesis Engine", av:"synthesis", ts:"14:15", sev:"info",
+        title:"🗞 Fleet Digest — Sat 14 Jun · AM brief",
+        ctx:"Covering 06:00–14:00 UTC · 23 findings across 5 channels · 1 critical · 3 high",
+        digest:[
+          {h:"🔴 Top of mind", t:"Sanctions hit on watched address <code>0xAB…01</code> (1.2M USDT exposure). Acknowledged 14:11 UTC. <span style='color:var(--accent)'>Full thread →</span>"},
+          {h:"📈 Markets · #intel-markets", t:"Sector rotation into L1 alternatives; ETH-BTC at 3-month low. No threshold breaches."},
+          {h:"⚖️ Regulatory · #intel-regulatory", t:"Tuesday markup confirmed on calendar. One interpretive guidance note flagged HIGH for compliance review."},
+          {h:"🔗 On-chain · #intel-onchain", t:"1 critical (above). 4 routine watchlist updates; no other threshold breaches."},
+        ],
+        btns:[{t:"🗂 Full archive"},{t:"💬 Ask the fleet"}],
+        foot:"Synthesis Engine · next brief 22:00 UTC · reading all #intel-* channels",
+        react:[{e:"🙏",n:1},{e:"👍",n:2}] },
+    ]
+  },
+
+  "fleet-ops": {
+    emoji:"📊", title:"fleet-ops",
+    health:{state:"🟡", text:"operational telemetry · muted · 1 ESCALATE awaiting gate"},
+    desc:"Fleet health, runs, budget · Watchdog + Auto-repair · 4×/day · canvas pinned",
+    badge:{type:"soft", n:"1"}, unread:true, canvas:"fleet",
+    msgs:[
+      { author:"Fleet Watchdog", av:"watchdog", ts:"14:00", sev:"info",
+        title:"🔵 Fleet Watchdog — Health & Budget",
+        ctx:"<code>14:00 UTC</code> · 12 agents · burn rate <b>on target</b> (68% of weekly budget, day 6/7)",
+        grid:[
+          "🟢 <b>Market Monitor</b><br>last run 14:02 · q8.6",
+          "🟢 <b>Regulatory Oracle</b><br>last run 09:40 · q9.1",
+          "🟡 <b>Research Digest</b><br>stale 4h · q7.1 · 1 fallback",
+          "🟢 <b>Sanctions Monitor</b><br>last run 14:06 · q8.9",
+          "🔴 <b>DeFi Monitor</b><br>no run since 06-12 · ESCALATED",
+          "🟢 <b>Synthesis Engine</b><br>last run 06:00 · q8.4",
+        ],
+        body:"<b>Auto-repair:</b> 1 open ESCALATE (DeFi Monitor — endpoint timeout, 3 consecutive failures). Proposed fix staged, awaiting operator gate.",
+        btns:[{t:"✅ Approve fix", style:"primary"},{t:"👀 Review diff"},{t:"📊 Budget detail"}],
+        foot:"Fleet Watchdog · kernel v1.5 · #fleet-ops · propose-and-gate",
+        react:[{e:"🐕",n:1}], thread:{avs:["operator"], last:"Operator reviewing 14:04"},
+        replies:[
+          {author:"Operator", av:"operator", ts:"14:04", body:"Reviewing the DeFi Monitor diff now before approving the repair."},
+        ] },
+    ]
+  },
+
+  "ask-fleet": {
+    emoji:"💬", title:"ask-fleet",
+    health:{state:"🟢", text:"interactive Q&A · notifies on all · data-cited answers"},
+    desc:"Ad-hoc questions · Fleet Query agent · live conversation · threaded per question",
+    badge:null, canvas:null,
+    msgs:[
+      { author:"Operator", av:"operator", ts:"13:48", plain:true,
+        body:"How many sanctions-related escalations have we surfaced in the last 90 days?" },
+      { author:"Fleet Query", av:"query", ts:"13:48", sev:"info",
+        title:"💬 7 sanctions escalations in the last 90 days",
+        ctx:"answered from SQLite data layer · <code>fq-2026-0614-1348</code>",
+        body:"<b>7</b> sanctions-related escalations since 16 Mar 2026 — 2 CRITICAL, 5 HIGH. Most recent: today 14:06 UTC (<code>0xAB…01</code>). Mean time-to-acknowledge: <b>6m 20s</b>.",
+        flds:[{k:"CRITICAL",v:"2"},{k:"HIGH",v:"5"},{k:"Mean ack time",v:"6m 20s"},{k:"Source rows",v:"data layer · 90d"}],
+        btns:[{t:"🗂 Show rows"},{t:"📈 Trend"},{type:"overflow"}],
+        foot:"Fleet Query · reads state stores + data layer · figures are data-cited" },
+    ]
+  },
+
+  "lab": {
+    emoji:"🧪", title:"lab",
+    health:{state:"🟡", text:"staging · unproven agents post here until quality ≥ threshold over N runs"},
+    desc:"Staging for new / unstable agents · graduates to intel-* on stable quality · muted",
+    badge:null, canvas:null,
+    msgs:[
+      { author:"Stablecoin Flow Monitor", av:"onchain", ts:"12:20", sev:"low",
+        title:"🟢 [LAB] Stablecoin net-flow snapshot",
+        ctx:"<code>12:20 UTC</code> · run 4/10 toward graduation · quality <b>7.4/10</b>",
+        body:"Net inflow to exchanges +$140M over 6h. Still in #lab — needs quality ≥ 8.0 over 10 consecutive runs before graduating to #intel-onchain.",
+        flds:[{k:"Graduation",v:"run 4 / 10"},{k:"Quality bar",v:"≥ 8.0"}],
+        btns:[{t:"📌 Open Canvas"},{type:"overflow"}],
+        foot:"Stablecoin Flow Monitor · kernel v1.5 · #lab · <em>not yet in operator feed</em>" },
+    ]
+  },
+};
+
+/* ============ CANVASES (right pane) ============ */
+const CANVASES = {
+  market: {
+    title:"Market Monitor State", updated:"2026-06-14 14:02 UTC", health:"🟢",
+    secs:[
+      {h:"Current snapshot (T-0)", table:{cols:["Asset","Price","24h"], rows:[["BTC","$62,400","🔻 2.1%"],["ETH","$3,200","🔺 1.4%"],["SOL","$148","🔺 5.2%"]]}},
+      {h:"Active narratives", list:["Sector rotation into L1 alternatives","Anticipation ahead of Tuesday regulatory markup"]},
+      {h:"Watchlist items", list:["BTC resistance at $65k","ETH-BTC ratio at 3-month low"]},
+      {h:"Quality history", spark:"9 8 9 8 9 7 8 9 8 9", note:"10-run avg 8.4 · trend stable→up"},
+    ]
+  },
+  regulatory: {
+    title:"Regulatory Oracle State", updated:"2026-06-14 09:40 UTC", health:"🟢",
+    secs:[
+      {h:"Tracked matters", table:{cols:["Matter","Status","Sev"], rows:[["Custody-rule guidance","Active","HIGH"],["Tuesday markup","Calendared","MED"],["Stablecoin bill","Proposed","LOW"]]}},
+      {h:"Upcoming deadlines", list:["Tue — committee markup (calendar event set)","Fri — comment period closes (stablecoin bill)"]},
+      {h:"Quality history", spark:"9 9 8 9 9 9 8 9 9 9", note:"10-run avg 8.9 · trend stable"},
+    ]
+  },
+  onchain: {
+    title:"On-Chain Watchlist State", updated:"2026-06-14 14:06 UTC", health:"🟢",
+    secs:[
+      {h:"Monitored addresses", table:{cols:["Address","Risk","Threshold"], rows:[["0xAB…01","HIGH","1M USDT"],["0xAB…02","MED","500k USDT"]]}},
+      {h:"Flagged counterparties", table:{cols:["Address","Reason"], rows:[["0xCD…FF","SDN EXAMPLE-2026-042"],["0xDE…AA","Mixing service"]]}},
+      {h:"Quality history", spark:"8 9 8 9 9 8 9 8 9 9", note:"10-run avg 8.6 · trend stable"},
+    ]
+  },
+  fleet: {
+    title:"Fleet State Store", updated:"2026-06-14 14:00 UTC", health:"🟡",
+    secs:[
+      {h:"Agent roster", table:{cols:["Agent","State","Quality"], rows:[["Market Monitor","🟢","8.6"],["Research Digest","🟡","7.1"],["DeFi Monitor","🔴","—"]]}},
+      {h:"Budget", list:["Weekly burn: 68% (day 6/7) — on target","JIT level: NORMAL · no throttling"]},
+      {h:"Open escalations", list:["DeFi Monitor — endpoint timeout (propose-and-gate, awaiting approval)"]},
+    ]
+  },
+};
+
+/* ============ FLEET HOME (aggregate overview) ============ */
+const HOME = {
+  kpis: [
+    { n:"12", l:"Agents in fleet", s:"🟢 9 healthy · 🟡 2 degraded · 🔴 1 down", cls:"ok" },
+    { n:"1", l:"Open escalations", s:"1 CRITICAL acknowledged · 0 unack", cls:"crit" },
+    { n:"68%", l:"Weekly budget", s:"day 6 / 7 · on target · JIT NORMAL", cls:"ok", bar:68 },
+    { n:"8.4", l:"Avg quality (10-run)", s:"trend stable→up · 9 8 9 8 9 7 8 9 8 9", cls:"warn" },
+  ],
+  tiles: [
+    { agent:"Market Monitor",      av:"market",    ch:"intel-markets",    s:"green",  q:"8.6", last:"14:02" },
+    { agent:"Market Pulse",        av:"market",    ch:"intel-markets",    s:"green",  q:"8.2", last:"10:00" },
+    { agent:"Regulatory Oracle",   av:"regoracle", ch:"intel-regulatory", s:"green",  q:"9.1", last:"09:40" },
+    { agent:"Model Governance",    av:"regoracle", ch:"intel-regulatory", s:"green",  q:"8.7", last:"08:00" },
+    { agent:"On-Chain Watchlist",  av:"onchain",   ch:"intel-onchain",    s:"green",  q:"8.5", last:"13:30" },
+    { agent:"Sanctions Monitor",   av:"sanctions", ch:"intel-onchain",    s:"green",  q:"8.9", last:"14:06" },
+    { agent:"DeFi Monitor",        av:"onchain",   ch:"intel-onchain",    s:"red",    q:"—",   last:"06-12" },
+    { agent:"Research Digest",     av:"research",  ch:"intel-research",   s:"yellow", q:"7.1", last:"09:40" },
+    { agent:"Breaking News",       av:"research",  ch:"intel-research",   s:"yellow", q:"7.6", last:"11:15" },
+    { agent:"Synthesis Engine",    av:"synthesis", ch:"digest",           s:"green",  q:"8.4", last:"06:00" },
+    { agent:"Fleet Watchdog",      av:"watchdog",  ch:"fleet-ops",        s:"green",  q:"8.8", last:"14:00" },
+    { agent:"Fleet Query",         av:"query",     ch:"ask-fleet",        s:"green",  q:"—",   last:"13:48" },
+  ],
+  attention: [
+    { sev:"crit", e:"🔴", t:"Sanctions hit on watched address 0xAB…01", d:"1.2M USDT exposure · acknowledged 14:11 UTC", ch:"intel-onchain" },
+    { sev:"high", e:"🟠", t:"Interpretive guidance flagged for compliance review", d:"custody-rule perimeter · Tuesday markup calendared", ch:"intel-regulatory" },
+    { sev:"info", e:"🔧", t:"DeFi Monitor down — auto-repair fix staged", d:"endpoint timeout, 3 failures · awaiting operator gate", ch:"fleet-ops" },
+    { sev:"high", e:"🟡", t:"Research Digest degraded — 1 fallback", d:"primary feed timeout · quality dipped to 7.1", ch:"intel-research" },
+  ],
+  digest: [
+    { h:"🔴 Top of mind", t:"Sanctions hit on 0xAB…01 (1.2M USDT). Acknowledged 14:11 UTC." },
+    { h:"📈 Markets", t:"Sector rotation into L1 alternatives; ETH-BTC at a 3-month low. No breaches." },
+    { h:"⚖️ Regulatory", t:"Tuesday markup confirmed. One guidance note flagged HIGH for review." },
+    { h:"🔗 On-chain", t:"1 critical (above). 4 routine watchlist updates; no other breaches." },
+  ],
+};
+
+/* ============ render ============ */
+function sidebarChannelRow(id, active){
+  const c = CHANNELS[id];
+  let badge = "";
+  if (c.badge) badge = `<span class="badge ${c.badge.type==='soft'?'soft':''}">${c.badge.n}</span>`;
+  const unread = (c.unread && !active) ? `<span class="unread" title="unread activity"></span>` : "";
+  const muted = ["alerts","ask-fleet"].includes(id) ? "" : `<span class="mute" title="muted by default">🔕</span>`;
+  const bold = (c.unread && !active) ? "style=\"font-weight:600;color:#fff\"" : "";
+  return `<button class="chan ${active?'active':''}" data-ch="${id}">
+    <span class="hash">#</span><span class="nm" ${bold}>${c.title}</span>${unread}${badge}${muted}
+  </button>`;
+}
+
+function renderSidebar(active){
+  const side = document.getElementById("sidebar");
+  let html = `<div class="ws-head">
+      <div class="ws-logo">AF</div>
+      <div><div class="name">Agent Fleet</div><div class="who">operator</div></div>
+    </div>`;
+  html += `<div class="grp" style="padding-bottom:6px">
+      <button class="chan ${active==='home'?'active':''}" data-ch="home">
+        <span class="hash">🏠</span><span class="nm" style="${active==='home'?'':'font-weight:600;color:#fff'}">Fleet Home</span>
+      </button>
+    </div>`;
+  for (const g of SIDEBAR){
+    html += `<div class="grp"><div class="grp-label">${g.label}</div>`;
+    html += g.channels.map(id=>sidebarChannelRow(id, id===active)).join("");
+    html += `</div>`;
+  }
+  side.innerHTML = html;
+  side.querySelectorAll(".chan").forEach(b=>{
+    b.addEventListener("click", ()=>select(b.dataset.ch));
+  });
+}
+
+function renderHead(id){
+  const c = CHANNELS[id];
+  const bms = ["📌 State Canvas","📈 Live Dashboard","🗂 Archive","📖 Agent Spec"]
+    .map(b=>`<span class="bm">${b}</span>`).join("");
+  document.getElementById("chanHead").innerHTML = `
+    <div class="chan-title"><span class="hash">#</span>${c.title}<span class="star">☆</span></div>
+    <div class="health"><span class="dot">${c.health.state}</span><span>${c.health.text}</span></div>
+    <div class="bookmarks">${bms}</div>`;
+}
+
+function renderMsg(m){
+  const a = AVATARS[m.av] || AVATARS.operator;
+  const avatar = `<div class="avatar" style="background:${a.bg}">${a.ic}</div>`;
+  const head = `<div class="msg-head"><span class="author">${m.author}</span>${m.plain?'':'<span class="bot">App</span>'}<span class="ts">${m.ts}</span></div>`;
+
+  if (m.plain){
+    return `<div class="msg">${avatar}<div class="msg-body">${head}<div style="margin-top:3px;font-size:.92rem">${m.body}</div></div></div>`;
+  }
+
+  let inner = `<h3>${m.title}</h3>`;
+  if (m.ctx) inner += `<div class="ctx">${m.ctx}</div>`;
+  if (m.body) inner += `<div class="body">${m.body}</div>`;
+  if (m.flds) inner += fields(m.flds);
+  if (m.grid) inner += `<div class="fields" style="grid-template-columns:1fr 1fr 1fr">${m.grid.map(g=>`<div class="fieldv" style="font-size:.82rem">${g}</div>`).join("")}</div>`;
+  if (m.digest) inner += m.digest.map(d=>`<div class="body"><b>${d.h}</b><br>${d.t}</div>`).join("");
+  if (m.img) inner += imgcard(m.img);
+
+  let card = `<div class="bk stripe ${m.sev||''}"><div class="bk-inner">${inner}</div>`;
+  if (m.btns){ card += `<div class="bk-divider"></div>` + actions(m.btns); }
+  if (m.foot){ card += `<div class="bk-foot">${m.foot}</div>`; }
+  card += `</div>`;
+
+  let extras = "";
+  if (m.react) extras += `<div class="react">${m.react.map(r=>`<span class="chip">${r.e} <b>${r.n}</b></span>`).join("")}<span class="chip" style="cursor:pointer">＋</span></div>`;
+  if (m.thread){
+    const avs = m.thread.avs.map(av=>{const a=AVATARS[av]||AVATARS.operator;return `<span class="ava" style="background:${a.bg}">${a.ic}</span>`;}).join("");
+    const n = m.replies ? m.replies.length : (m.thread.n || 0);
+    extras += `<div class="thread" role="button" tabindex="0"><span class="caret">▸</span>${avs}<span>${n} repl${n!==1?'ies':'y'}</span><span style="color:var(--faint)">· ${m.thread.last}</span></div>`;
+    if (m.replies){
+      const rows = m.replies.map(r=>{
+        const a = AVATARS[r.av] || AVATARS.operator;
+        return `<div class="reply"><div class="ra" style="background:${a.bg}">${a.ic}</div>
+          <div class="rb"><div class="rhead"><b>${r.author}</b><span class="rt">${r.ts}</span></div>
+          <div class="rbody">${r.body}</div></div></div>`;
+      }).join("");
+      extras += `<div class="replies">${rows}</div>`;
+    }
+  }
+
+  return `<div class="msg">${avatar}<div class="msg-body">${head}${card}${extras}</div></div>`;
+}
+
+function renderFeed(id){
+  const c = CHANNELS[id];
+  const feed = document.getElementById("feed");
+  const intro = `<div class="intro"><b>#${c.title}</b> — ${c.desc}</div>`;
+  const sep = `<div class="daysep"><span>Today · 14 Jun 2026</span></div>`;
+  feed.innerHTML = intro + sep + c.msgs.map(renderMsg).join("");
+  feed.scrollTop = 0;
+}
+
+function renderCanvas(id){
+  const c = CHANNELS[id];
+  const pane = document.getElementById("canvasPane");
+  if (!c.canvas || !CANVASES[c.canvas]){
+    pane.innerHTML = `<div class="cv-head"><div class="k">Pinned canvas</div><div class="t">— none for this channel —</div></div>
+      <div class="cv-body"><p style="color:var(--muted);font-size:.85rem">Escalation, digest, and interaction channels don't pin a state canvas. Intel and fleet-ops channels mirror their agent's live state here.</p></div>
+      ${legend()}`;
+    return;
+  }
+  const cv = CANVASES[c.canvas];
+  let body = "";
+  for (const s of cv.secs){
+    body += `<div class="cv-sec"><h4>${s.h}</h4>`;
+    if (s.list) body += `<ul>${s.list.map(i=>`<li>${i}</li>`).join("")}</ul>`;
+    if (s.table){
+      body += `<table class="cv"><tr>${s.table.cols.map(c=>`<th>${c}</th>`).join("")}</tr>`;
+      body += s.table.rows.map(r=>`<tr>${r.map(x=>`<td>${x.startsWith('0x')?`<code>${x}</code>`:x}</td>`).join("")}</tr>`).join("");
+      body += `</table>`;
+    }
+    if (s.spark) body += `<div class="spark">${s.spark}</div><p style="color:var(--muted);font-size:.78rem;margin-top:3px">${s.note}</p>`;
+    body += `</div>`;
+  }
+  pane.innerHTML = `<div class="cv-head"><div class="k">📌 Pinned canvas</div><div class="t">${cv.health} ${cv.title}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:3px">Last updated ${cv.updated}</div></div>
+    <div class="cv-body">${body}</div>${legend()}`;
+}
+
+function renderHome(){
+  document.getElementById("chanHead").innerHTML = `
+    <div class="chan-title">🏠 Fleet Home</div>
+    <div class="health"><span class="dot">🟡</span><span>1 agent down · 2 degraded · 1 open escalation · budget on target</span></div>`;
+  document.getElementById("composer").innerHTML = "";
+
+  const kpis = HOME.kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kn">${k.n}</div><div class="kl">${k.l}</div>
+      ${k.bar!=null ? `<div class="progress" style="margin-top:8px"><span style="width:${k.bar}%"></span></div>` : ""}
+      <div class="ks" style="color:var(--muted)">${k.s}</div>
+    </div>`).join("");
+
+  const tiles = HOME.tiles.map(t=>{
+    const dot = t.s==="green"?"🟢":t.s==="yellow"?"🟡":"🔴";
+    return `<div class="tile s-${t.s}" data-ch="${t.ch}" role="button" tabindex="0">
+      <div class="ta"><span style="font-size:.95rem">${dot}</span> ${t.agent}</div>
+      <div class="tc">#${t.ch}</div>
+      <div class="tm"><span>quality <b>${t.q}</b></span><span>last <b>${t.last}</b></span></div>
+    </div>`;
+  }).join("");
+
+  const attn = HOME.attention.map(x=>`
+    <div class="attn-row ${x.sev}" data-ch="${x.ch}" role="button" tabindex="0">
+      <span class="ae">${x.e}</span>
+      <div class="ab"><div class="at">${x.t}</div><div class="ad">${x.d}</div></div>
+      <span class="ach">#${x.ch} →</span>
+    </div>`).join("");
+
+  const digest = HOME.digest.map(d=>`<div class="dr"><b>${d.h}</b> — ${d.t}</div>`).join("");
+
+  document.getElementById("feed").innerHTML = `
+    <div class="home">
+      <h2>Fleet Home</h2>
+      <p class="lede">The operator's first glance — fleet-wide state aggregated across every channel. Answers "is anything on fire?" before you open a single feed. Click any tile or item to jump to its channel.</p>
+
+      <section><h3>At a glance <span class="rule"></span></h3>
+        <div class="kpis">${kpis}</div>
+      </section>
+
+      <section><h3>Needs attention <span class="rule"></span></h3>
+        <div class="attn">${attn}</div>
+      </section>
+
+      <div class="twocol">
+        <section><h3>Agent health · 12 agents <span class="rule"></span></h3>
+          <div class="tiles">${tiles}</div>
+        </section>
+        <section><h3>Today's digest · AM brief <span class="rule"></span></h3>
+          <div class="digest-mini">${digest}</div>
+          <p style="font-size:.74rem;color:var(--faint);margin-top:8px">Posted to <span style="color:var(--accent)">#digest</span> 14:15 UTC · next brief 22:00 UTC</p>
+        </section>
+      </div>
+    </div>`;
+  document.getElementById("feed").scrollTop = 0;
+
+  // click-through from tiles / attention rows / digest link to channels
+  document.querySelectorAll('#feed [data-ch]').forEach(el=>{
+    el.addEventListener("click", ()=>select(el.dataset.ch));
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(el.dataset.ch); } });
+  });
+}
+
+function renderHomeCanvas(){
+  document.getElementById("canvasPane").innerHTML = `
+    <div class="cv-head"><div class="k">📋 Fleet legend</div><div class="t">How to read this workspace</div></div>
+    <div class="cv-body">
+      <div class="cv-sec"><h4>Channel groups</h4><ul>
+        <li>🛰 <b>intel-*</b> — topic intelligence feeds</li>
+        <li>🚨 <b>#alerts</b> — critical escalation only (notifies)</li>
+        <li>📊 <b>#fleet-ops</b> — health, runs, budget</li>
+        <li>🗞 <b>#digest</b> — consolidated daily briefs</li>
+        <li>💬 <b>#ask-fleet</b> — interactive Q&amp;A</li>
+        <li>🧪 <b>#lab</b> — staging for new agents</li>
+      </ul></div>
+      <div class="cv-sec"><h4>Severity</h4>
+        <p>🔴 critical · 🟠 high · 🟡 medium · 🟢 low · 🔵 info</p></div>
+      <div class="cv-sec"><h4>Routing</h4>
+        <p>Severity → destination is fleet-wide and mechanical. CRITICAL fans out to #alerts + operator DM; routine output stays in its topic channel.</p></div>
+    </div>${legend()}`;
+}
+
+function renderComposer(id){
+  const c = CHANNELS[id];
+  const comp = document.getElementById("composer");
+  comp.innerHTML = `
+    <div class="box">
+      <div class="tools"><span title="bold">𝐁</span><span title="italic">𝑖</span><span title="link">🔗</span><span title="list">≣</span><span title="code">＜＞</span></div>
+      <div class="field" style="padding:0">
+        <input id="composerInput" type="text" placeholder="Message #${c.title}"
+          style="flex:1;background:none;border:none;outline:none;color:var(--text);font:inherit;font-size:.9rem;padding:9px 12px"
+          autocomplete="off">
+        <button class="send" id="composerSend" style="margin:6px 8px 6px 0;cursor:pointer;border:none">➤ Send</button>
+      </div>
+    </div>
+    <div class="hint">
+      <span><kbd>↑</kbd><kbd>↓</kbd> change channel</span>
+      <span><kbd>t</kbd> toggle theme</span>
+      <span>click <b>▸ replies</b> to expand a thread</span>
+      <span style="color:var(--faint)">type to post a demo message — local only, resets on refresh</span>
+    </div>`;
+  const input = comp.querySelector("#composerInput");
+  const send = comp.querySelector("#composerSend");
+  const post = ()=>{
+    const text = input.value.trim();
+    if (!text) return;
+    const feed = document.getElementById("feed");
+    feed.insertAdjacentHTML("beforeend", renderMsg({
+      author:"Operator", av:"operator", ts:nowHM(), plain:true, body:escapeHtml(text)
+    }));
+    input.value = "";
+    feed.scrollTop = feed.scrollHeight;
+    send.style.opacity = ".5";
+  };
+  input.addEventListener("input", ()=>{ send.style.opacity = input.value.trim() ? "1" : ".5"; });
+  input.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); post(); } });
+  send.addEventListener("click", post);
+}
+
+function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function escapeHtml(s){ return s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function legend(){
+  return `<div class="legend">
+    <b>Severity</b> &nbsp; 🔴 critical &nbsp; 🟠 high &nbsp; 🟡 medium &nbsp; 🟢 low &nbsp; 🔵 info<br>
+    <b>Channels</b> &nbsp; 🔕 muted by default · #alerts & #ask-fleet notify<br>
+    <span style="color:var(--faint)">Static portrait — built from the workspace + Block Kit specs in <code style="font-family:var(--mono)">schemas/</code>.</span>
+  </div>`;
+}
+
+let current = null;
+const CHANNEL_ORDER = ["home", ...SIDEBAR.flatMap(g=>g.channels)];
+
+function select(id){
+  current = id;
+  if (id === "home"){
+    renderSidebar("home");
+    renderHome();
+    renderHomeCanvas();
+    history.replaceState(null, "", "#home");
+    return;
+  }
+  renderSidebar(id);
+  renderHead(id);
+  renderFeed(id);
+  renderCanvas(id);
+  renderComposer(id);
+  history.replaceState(null, "", "#"+id);
+}
+
+function toggleTheme(){
+  const b = document.body;
+  b.dataset.theme = b.dataset.theme === "dark" ? "light" : "dark";
+}
+
+/* theme toggle button */
+document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+/* expandable threads (event delegation on the feed) */
+document.getElementById("feed").addEventListener("click", (e)=>{
+  const t = e.target.closest(".thread");
+  if (!t) return;
+  t.classList.toggle("open");
+  const rep = t.nextElementSibling;
+  if (rep && rep.classList.contains("replies")) rep.classList.toggle("show");
+});
+document.getElementById("feed").addEventListener("keydown", (e)=>{
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("thread")){
+    e.preventDefault(); e.target.click();
+  }
+});
+
+/* keyboard navigation between channels */
+document.addEventListener("keydown", (e)=>{
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea") return;
+  const i = CHANNEL_ORDER.indexOf(current);
+  if (e.key === "ArrowDown" || e.key === "j"){ e.preventDefault(); select(CHANNEL_ORDER[(i+1) % CHANNEL_ORDER.length]); }
+  else if (e.key === "ArrowUp" || e.key === "k"){ e.preventDefault(); select(CHANNEL_ORDER[(i-1+CHANNEL_ORDER.length) % CHANNEL_ORDER.length]); }
+  else if (e.key === "t"){ toggleTheme(); }
+});
+
+/* boot */
+const start = (location.hash||"").replace("#","");
+select((start === "home" || CHANNELS[start]) ? start : "home");
+</script>
+</body>
+</html>
